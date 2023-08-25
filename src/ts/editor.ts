@@ -7,10 +7,10 @@ import {closeBrackets, closeBracketsKeymap} from "@codemirror/autocomplete"
 import {highlightSelectionMatches, search} from "search"
 import {autocompletion, completionKeymap} from "@codemirror/autocomplete"
 import {markdown, markdownKeymap, markdownLanguage} from "@codemirror/lang-markdown"
-import {ankiImagePaste} from "./CodeMirror.extensions/ankiImagePaste"
 import {classHighlighter} from '@lezer/highlight'
 import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
 
+import {ankiPaste} from "./CodeMirror.extensions/ankiPaste"
 import {to_function} from "./commands"
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
 import { cloze_decorator } from "./CodeMirror.extensions/cloze_decorator"
@@ -89,7 +89,7 @@ class Editor {
       ),
       EditorView.lineWrapping,
       markdown({ base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages }),
-      ankiImagePaste()
+      ankiPaste()
     ]
     if (cfg.events) this.extensions.push(EditorView.domEventHandlers(cfg.events))
 

@@ -54,8 +54,8 @@ def add_srcs(web_content: aqt.webview.WebContent, context: object):
 
 ###########################################################################
 def bridge(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool, Any]:
-    """Bridge to handle image pasting - inserts in media library and returns the MD string"""
-    if message == 'clipboard_image_to_markdown':
+    """Bridge to handle HTML and image pasting - convert to MD or insert in media library. Returns the MD string."""
+    if message == 'clipboard_to_markdown':
         file = clip_img_to_md()
         return (True, file)
 
