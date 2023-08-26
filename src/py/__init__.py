@@ -9,7 +9,7 @@ mw.addonManager.setWebExports(__name__, r"(.*(css|js|map))")
 config = mw.addonManager.getConfig(__name__)
 
 CVER = get_version()
-NVER = "2.2.3"
+NVER = "2.2.4"
 
 msgs = []
 

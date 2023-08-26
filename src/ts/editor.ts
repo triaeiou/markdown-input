@@ -7,10 +7,10 @@ import {closeBrackets, closeBracketsKeymap} from "@codemirror/autocomplete"
 import {highlightSelectionMatches, search} from "search"
 import {autocompletion, completionKeymap} from "@codemirror/autocomplete"
 import {markdown, markdownKeymap, markdownLanguage} from "@codemirror/lang-markdown"
-import {ankiImagePaste} from "./CodeMirror.extensions/ankiImagePaste"
 import {classHighlighter} from '@lezer/highlight'
 import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
 
+import {ankiPaste} from "./CodeMirror.extensions/ankiPaste"
 import {to_function} from "./commands"
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
 import { cloze_decorator } from "./CodeMirror.extensions/cloze_decorator"
@@ -25,6 +25,7 @@ interface Shortcut {
 }
 interface Configuration {
   parent: Element
+  html_to_md?: (html: string) => string
   keymap?: [Shortcut]
   oninput?: (doc: string) => void
   events?: {}
@@ -89,7 +90,7 @@ class Editor {
       ),
       EditorView.lineWrapping,
       markdown({ base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages }),
-      ankiImagePaste()
+      ankiPaste({html_to_md: cfg.html_to_md})
     ]
     if (cfg.events) this.extensions.push(EditorView.domEventHandlers(cfg.events))
 
@@ -117,7 +118,7 @@ class Editor {
     this.cm = new EditorView(editor_view)
   }
 
-  set_doc(doc: string, ord: number, pos: 'start'|'end') {
+  set_doc(doc: string, pos: 'start'|'end') {
     this.cm.setState(EditorState.create({
       doc: doc,
       extensions: this.extensions,

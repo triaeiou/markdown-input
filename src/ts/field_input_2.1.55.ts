@@ -20,6 +20,7 @@ interface Configuration {
 }
 interface MDInputAPI {
   container: HTMLElement,
+  html_to_md?: (html: string) => string,
   editor: Editor,
   badge: HTMLSpanElement,
   refocus: readonly SelectionRange[],
@@ -204,8 +205,10 @@ async function toggle(field: number | EditorFieldAPI) {
   mi.container.hidden ? show(mi) : hide(mi)
 
   async function show(mi: MDInputAPI) {
-    const [md, ord] = _converter.html_to_markdown(get(field.editingArea.content) as string)
-    mi.editor.set_doc(md, ord, 'end')
+    mi.editor.set_doc(
+      _converter.html_to_markdown(get(field.editingArea.content) as string),
+      'end'
+    )
     mi.container.hidden = false
     mi.badge.innerHTML = MD_SOLID
     mi.editor.cm.focus()
@@ -272,10 +275,11 @@ async function update_all() {
       focused = true
     }
 
-    if (el?.markdown_input?.container.hidden === false) {
-      const [md, ord] = _converter.html_to_markdown(get(field.editingArea.content) as string)
-      el.markdown_input.editor.set_doc(md, ord, 'end');
-    }
+    if (el?.markdown_input?.container.hidden === false)
+      el.markdown_input.editor.set_doc(
+        _converter.html_to_markdown(get(field.editingArea.content) as string),
+        'end'
+      )
   }
 }
 
@@ -307,8 +311,7 @@ async function focusin(evt: FocusEvent) {
       for (const fld of await editor().instances[0].fields) {
         if ((await fld.element) === el) {
           el.markdown_input.editor['unsubscribe'] = fld.editingArea.content.subscribe(html => {
-            const [md, ord] = _converter.html_to_markdown(html)
-            el.markdown_input.editor.set_doc(md, ord, "end")
+            el.markdown_input.editor.set_doc(_converter.html_to_markdown(html), "end")
           })
           break
         }

@@ -52,6 +52,7 @@ function create_editor(parent: HTMLDivElement, onchange: (html: string) => void)
 
   return new Editor({
     parent: parent,
+    html_to_md: (html: string) => {return _converter.html_to_markdown(html)},
     oninput: (md: string) => onchange(_converter.markdown_to_html(md)),
     events: events,
     highlight: {},
@@ -70,8 +71,7 @@ function focus() {
 /////////////////////////////////////////////////////////////////////////////
 // Non-arrow function (for `this` use) to set content of custom editor
 function set_content(html: string) {
-  const [md, ord] = _converter.html_to_markdown(html)
-  this.editor.set_doc(md, ord, 'end')
+  this.editor.set_doc(_converter.html_to_markdown(html), 'end')
 }
 
 /////////////////////////////////////////////////////////////////////////////

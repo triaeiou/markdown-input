@@ -10,6 +10,7 @@ class WindowEditor {
     Object.assign(this, cfg)
     this.editor = new Editor({
       parent: parent,
+      html_to_md: (html: string) => {return this.converter.html_to_markdown(html)},
       ...this[EDITOR]
     })
     this.converter = new Converter(this[CONVERTER])
@@ -25,12 +26,9 @@ class WindowEditor {
       let html = ''
       for (const [title, content] of fields)
         html += `<!-- ${title} --><br><br>${content}<br><br>`
-      const [md, ord] = this.converter.html_to_markdown(html)
-      this.editor.set_doc(md, ord, 'start')
-    } else {
-      const [md, ord] = this.converter.html_to_markdown(fields[i][1])
-      this.editor.set_doc(md, ord, 'end')
-    }
+      this.editor.set_doc(this.converter.html_to_markdown(html), 'start')
+    } else
+      this.editor.set_doc(this.converter.html_to_markdown(fields[i][1]), 'end')
     this.editor.cm.focus()
   }
 
