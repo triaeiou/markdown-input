@@ -94,6 +94,7 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - "Window input mode" can be configured under `Window input`.
 - HTML ↔ Markdown conversion configurable under `Converter`. See [mdastToMarkdown](https://github.com/syntax-tree/mdast-util-to-markdown#tomarkdowntree-options) for `Markdown format` options.
 - Editor configurable under `CodeMirror`. See [CodeMirror documentation](https://codemirror.net/docs/) how to configure.
+- Paste functionality can be configured to convert pasted HTML to Markdown (`CodeMirror/paste/html`) and to paste images (`CodeMirror/paste/image`).
 - Default Anki behaviour is to use the entire sort field text in the Browser table, `Browser sort field` option (default `true`) instead uses content of first level 1 heading (if existing).
 - Note that Anki shortcuts grab key sequences before they reach the CodeMirror editor, use [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) or other addon to change the Anki shortcuts as needed. At the time of writing [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) hooks into the Qt/Python for the cloze shortcuts. This means they never reach CodeMirror so unmap (`<nop`>) them in [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) (the new Anki editor grabs the shortcuts on the JavaScript side).
 - To customize the look of the finished HTML apply custom [CSS](https://www.w3schools.com/Css/) styling (for instance of `<h1/2/3/etc>`, `<table>` `<ul/ol>` etc.) to the note template.
@@ -186,4 +187,4 @@ Functionality split into different classes to facilitate reuse:
 - 2023-04-26: Improve logic to fix anoying eating of trailing spaces, change search/replace dialog placement so that it is visible without having to scroll.
 - 2023-05-04: Add `rich text/markdown` field default configuration option, add list continuation thanks to [David C.](https://github.com/d-k-bo).
 - 2023-06-01: Table bug fix (tables now non-optional), rename config option from `Table style` to `Tables`, add code block syntax highlighting, add `Browser sort field` option, add styling of cloze tags in the Markdown editor.
-- 2023-08-26: Add conversion of HTML to Markdown when pasting.
+- 2023-08-26: Add options to paste HTML as Markdown and paste image.

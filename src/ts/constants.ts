@@ -30,14 +30,23 @@ export const EDITOR = "CodeMirror"
 export const KEYMAP = "keymap"
 export const THEME = "Theme"
 export const SYNTAX = "Syntax highlighting"
+export const PASTE = "paste"
+export const PASTE_HTML = "html"
+export const PASTE_IMAGE = "image"
 
 // General
 export const MDI = "MDI"
 
 import { Options as AnkiMdHtmlOptions } from "anki-md-html"
 import { Configuration as CMConfiguration } from "./editor"
+interface EditorConfiguration extends CMConfiguration {
+  paste: {
+    html?: boolean,
+    image?: boolean
+  }
+}
 export interface Configuration {
   'Field input': {},
   'Converter': AnkiMdHtmlOptions,
-  'CodeMirror': CMConfiguration
+  'CodeMirror': EditorConfiguration
 }

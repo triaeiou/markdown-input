@@ -10,10 +10,12 @@ import {markdown, markdownKeymap, markdownLanguage} from "@codemirror/lang-markd
 import {classHighlighter} from '@lezer/highlight'
 import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
 
-import {ankiPaste} from "./CodeMirror.extensions/ankiPaste"
+import type {Handler as PasteHandler} from "./CodeMirror.extensions/custom_paste"
+import {custom_paste} from "./CodeMirror.extensions/custom_paste"
 import {to_function} from "./commands"
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
 import { cloze_decorator } from "./CodeMirror.extensions/cloze_decorator"
+import { modifiers } from "./CodeMirror.extensions/modifiers"
 
 /** CodeMirror instance configuration */
 interface Shortcut {
@@ -25,6 +27,7 @@ interface Shortcut {
 }
 interface Configuration {
   parent: Element
+  paste_handler?: PasteHandler
   html_to_md?: (html: string) => string
   keymap?: [Shortcut]
   oninput?: (doc: string) => void
@@ -89,18 +92,11 @@ class Editor {
         ])
       ),
       EditorView.lineWrapping,
-      markdown({ base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages }),
-      ankiPaste({html_to_md: cfg.html_to_md})
+      modifiers,
+      markdown({base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages})
     ]
+    if (cfg.paste_handler) this.extensions.push(custom_paste(cfg.paste_handler))
     if (cfg.events) this.extensions.push(EditorView.domEventHandlers(cfg.events))
-
-    let view = new EditorView({
-      state: EditorState.create({
-        doc: '',
-        extensions: [
-        ]
-      })
-    });
 
     const editor_view = {
       state: EditorState.create({extensions: this.extensions}),
@@ -135,13 +131,5 @@ class Editor {
   }
 }
 
-function highlighter(cfg: {}) {
-
-}
-
-function theme(cfg: {}) {
-
-}
-
 export type {Shortcut, Configuration}
-export {Editor, highlighter, theme}
+export {Editor}

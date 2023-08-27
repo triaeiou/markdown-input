@@ -32,6 +32,9 @@ EDITOR = "CodeMirror"
 KEYMAP = "keymap"
 THEME = "Theme"
 SYNTAX = "Syntax highlighting"
+PASTE = "paste"
+PASTE_HTML = "html"
+PASTE_IMAGE = "image"
 
 # General
 GENERAL = "General"

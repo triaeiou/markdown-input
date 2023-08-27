@@ -3,15 +3,17 @@ import type { EditorFieldAPI } from "anki/ts/editor/EditorField.svelte"
 import { Editor } from "./editor"
 import { Converter } from "anki-md-html"
 import { ancestor } from "./utils"
+import { paste_handler } from "./paste_handler"
 import { CustomInputClass } from "./custom_input"
 import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_DEFAULT, FIELD_INPUT,
-  SC_TOGGLE, HIDE_TOOL, MDI, Configuration } from "./constants"
+  SC_TOGGLE, HIDE_TOOL, MDI, Configuration, PASTE, PASTE_HTML, PASTE_IMAGE } from "./constants"
+import { Callback } from "./CodeMirror.extensions/custom_paste"
 
 const MD = '<!--?xml version="1.0" encoding="UTF-8"?--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="mdi-md-hollow" width="24" height="24" viewBox="0 0 208 128"><path clip-rule="evenodd" d="m15 10c-2.7614 0-5 2.2386-5 5v98c0 2.761 2.2386 5 5 5h178c2.761 0 5-2.239 5-5v-98c0-2.7614-2.239-5-5-5zm-15 5c0-8.28427 6.71573-15 15-15h178c8.284 0 15 6.71573 15 15v98c0 8.284-6.716 15-15 15h-178c-8.28427 0-15-6.716-15-15z" fill-rule="evenodd"/><path d="m30 98v-68h20l20 25 20-25h20v68h-20v-39l-20 25-20-25v39zm125 0-30-33h20v-35h20v35h20z"/></svg>'
 
-let _config
-let _converter
-let _editor_count
+let _config: Configuration
+let _converter: Converter
+let _editor_count: number
 
 /////////////////////////////////////////////////////////////////////////////
 // Non-arrow function (for `this` use) to instantiate an editor instance
@@ -52,11 +54,15 @@ function create_editor(parent: HTMLDivElement, onchange: (html: string) => void)
 
   return new Editor({
     parent: parent,
-    html_to_md: (html: string) => {return _converter.html_to_markdown(html)},
+    paste_handler: (clipboard: DataTransfer, callback: Callback) => paste_handler(
+      clipboard,
+      callback,
+      _converter,
+      _config[EDITOR]?.[PASTE]?.[PASTE_HTML],
+      _config[EDITOR]?.[PASTE]?.[PASTE_IMAGE]
+    ),
     oninput: (md: string) => onchange(_converter.markdown_to_html(md)),
     events: events,
-    highlight: {},
-    theme: {},
     ..._config[EDITOR]
   })
 }
