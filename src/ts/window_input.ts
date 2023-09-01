@@ -1,8 +1,9 @@
 import { Editor } from "./editor"
+import type { EditorView } from "./editor"
 import { Converter } from "anki-md-html"
 import { paste_handler } from "./paste_handler"
 import { Configuration, CONVERTER, WINDOW_INPUT, WINDOW_MODE, EDITOR, PASTE, DEFAULT } from "./constants"
-import { Callback, Modifiers } from "./CodeMirror.extensions/custom_paste"
+import { Callback } from "./CodeMirror.extensions/custom_paste"
 
 class WindowEditor {
   editor: Editor
@@ -13,11 +14,11 @@ class WindowEditor {
     this.converter = new Converter(this[CONVERTER])
     this.editor = new Editor({
       parent: parent,
-      paste_handler: (callback: Callback, alt: boolean) => paste_handler(
+      paste_handler: (view: EditorView, func: string, callback: Callback) => paste_handler(
         this.converter,
-        this[EDITOR]?.[PASTE]?.[DEFAULT] === 'markdown' ? 'markdown' : 'text',
-        callback,
-        alt
+        view,
+        func,
+        callback
       ),
       ...this[EDITOR]
     })

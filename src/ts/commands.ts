@@ -1,11 +1,13 @@
 import * as commands from "@codemirror/commands"
 import * as search from "search"
-import * as mdi_commands from "./CodeMirror.extensions/mdi_commands"
+import * as cloze from "./CodeMirror.extensions/cloze"
+import * as join_lines from "./CodeMirror.extensions/join_lines"
+import * as custom_paste from "./CodeMirror.extensions/custom_paste"
 
 const _fns: any[] = []
 
 export function to_function(name: string) {
-  if (!_fns.length) _init([commands, search, mdi_commands])
+  if (!_fns.length) _init([commands, search, cloze, join_lines, custom_paste])
   return _fns[name]
 
   function _init(namespaces: any[]) {

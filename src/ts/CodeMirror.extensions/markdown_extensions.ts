@@ -1,4 +1,4 @@
-import {MarkdownConfig, Line, LeafBlockParser, BlockContext, InlineContext, LeafBlock} from "@lezer/markdown"
+import {MarkdownConfig, InlineContext} from "@lezer/markdown"
 import {tags as t} from "@lezer/highlight"
 
 // Copied without change from lezer/markdown

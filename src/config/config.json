@@ -78,15 +78,25 @@
 				"key": "Mod-Shift-j",
 				"run": "joinLines",
 				"preventDefault": true
+			},
+			{
+				"key": "Mod-Shift-u",
+				"run": "unclozeSelections",
+				"preventDefault": true
 			}
 		],
+		"paste": {
+			"markdown": "",
+			"markdownStripClozes": "",
+			"markdownAppendClozes": "",
+			"text": "",
+			"textStripClozes": "",
+			"textAppendClozes": ""
+		},
 		"search": {
 			"caseSensitive": false,
 			"regexp": true,
 			"wholeWord": false
-		},
-		"paste": {
-			"default": "markdown"
 		}
 	},
 	"General": {

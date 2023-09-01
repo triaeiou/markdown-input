@@ -7,7 +7,8 @@ import type { EditorFieldAPI, EditingInputAPI } from "anki/ts/editor/EditorField
 import type { RichTextInputAPI } from "anki/ts/editor/rich-text-input"
 // @ts-ignore FIXME: how to import correctly?
 import type { PlainTextInputAPI } from "anki/ts/editor/plain-text-input"
-import { Editor, Configuration as CMConfiguration } from "./editor"
+import type { EditorView, Configuration as CMConfiguration } from "./editor"
+import { Editor } from "./editor"
 import { Converter, Options as AnkiMdHtmlOptions } from "anki-md-html"
 import { paste_handler } from "./paste_handler"
 import { SelectionRange } from "@codemirror/state"
@@ -156,11 +157,11 @@ async function add_editor(field: EditorFieldAPI, hidden: boolean): Promise<MDInp
   container.hidden = hidden
   const tmp = {
     parent: container,
-    paste_handler: (callback: Callback, alt: boolean) => paste_handler(
+    paste_handler: (view: EditorView, func: string, callback: Callback) => paste_handler(
       _converter,
-      _config[EDITOR]?.[PASTE]?.[DEFAULT] === 'markdown' ? 'markdown' : 'text',
-      callback,
-      alt
+      view,
+      func,
+      callback
     ),
     oninput: (md: string) => {
       field.editingArea.content.set(_converter.markdown_to_html(md))

@@ -1,4 +1,4 @@
-import {EditorView, keymap, highlightSpecialChars, drawSelection, rectangularSelection, crosshairCursor, highlightActiveLine, dropCursor} from "@codemirror/view"
+import {EditorView, keymap, highlightSpecialChars, drawSelection, rectangularSelection, crosshairCursor, highlightActiveLine, dropCursor, KeyBinding} from "@codemirror/view"
 import {EditorState, Transaction, EditorSelection, SelectionRange, Prec} from "@codemirror/state"
 import {indentOnInput, bracketMatching, indentUnit, syntaxHighlighting} from "@codemirror/language"
 import {languages} from "@codemirror/language-data"
@@ -10,23 +10,24 @@ import {markdown, markdownKeymap, markdownLanguage} from "@codemirror/lang-markd
 import {classHighlighter} from '@lezer/highlight'
 import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
 
-import type {Handler as PasteHandler} from "./CodeMirror.extensions/custom_paste"
-import {custom_paste} from "./CodeMirror.extensions/custom_paste"
+import type {Options as PasteOptions} from "./CodeMirror.extensions/custom_paste"
+import {customPaste} from "./CodeMirror.extensions/custom_paste"
 import {to_function} from "./commands"
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
-import { cloze_decorator } from "./CodeMirror.extensions/cloze_decorator"
+import {clozeDecorator} from "./CodeMirror.extensions/cloze"
 
 /** CodeMirror instance configuration */
+
 interface Shortcut {
   key: string,
   shift?: string,
   run?: string,
   scope?: string,
-  preventDefault?: string
+  preventDefault?: boolean
 }
 interface Configuration {
   parent: Element
-  paste_handler?: PasteHandler
+  paste_options?: PasteOptions
   html_to_md?: (html: string) => string
   keymap?: [Shortcut]
   oninput?: (doc: string) => void
@@ -53,7 +54,7 @@ class Editor {
   constructor(cfg: Configuration) {
     const km = []
     for (const sc of cfg.keymap) {
-      const tmp: Shortcut = {key: sc.key}
+      const tmp: KeyBinding = {key: sc.key}
       if('shift' in sc) tmp.shift = to_function(sc.shift) //cm_functions[sc.shift]
       if('run' in sc) tmp.run = to_function(sc.run) //cm_functions[sc.run]
       if('scope' in sc) tmp.scope = sc.scope
@@ -76,9 +77,8 @@ class Editor {
       highlightActiveLine(),
       highlightSelectionMatches(),
       syntaxHighlighting(classHighlighter, {fallback: false}),
-      cloze_decorator,
+      clozeDecorator,
       indentUnit.of("    "),
-      // @ts-ignore FIXME: what is correct TS for below?
       Prec.highest(
         keymap.of([
           ...km,
@@ -93,7 +93,7 @@ class Editor {
       EditorView.lineWrapping,
       markdown({base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages})
     ]
-    if (cfg.paste_handler) this.extensions.push(custom_paste(cfg.paste_handler))
+    if (cfg.paste_options) this.extensions.push(customPaste(cfg.paste_options))
     if (cfg.events) this.extensions.push(EditorView.domEventHandlers(cfg.events))
 
     const editor_view = {
@@ -129,5 +129,5 @@ class Editor {
   }
 }
 
-export type {Shortcut, Configuration}
+export type {Shortcut, Configuration, EditorView}
 export {Editor}

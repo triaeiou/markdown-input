@@ -4,5 +4,5 @@ function ancestor(descendant: HTMLElement, selector: string) {
             descendant = descendant.parentElement
     return descendant
 }
-  
+
 export {ancestor}

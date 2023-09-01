@@ -1,17 +1,49 @@
 import { EditorView } from "@codemirror/view"
 
-export interface Modifiers {shift?: boolean, alt?: boolean, meta?: boolean}
-export interface Result {text: string, pos: number}
-export type Callback = (result: Result) => void
-export type Handler = (callback: Callback, alt: boolean) => void
+type Callback = (result: Result) => void
+interface Result {text: string, pos: number}
+interface Options {
+  handler: (view: EditorView, func: string, callback: Callback) => void,
+  shortcuts: {name: string, shortcut: string}[]
+}
+
+class Sequence {
+  shift = false
+  alt = false
+  meta = false
+  key = ""
+
+  constructor(sequence: string|KeyboardEvent) {
+    if (typeof(sequence) === 'string') {
+      for (const el of sequence.split('+')) {
+        const el_ = el.toLocaleLowerCase()
+        if (el_ === 'shift') this.shift = true
+        else if (el_ === 'alt') this.alt = true
+        else if (el_ === 'meta' || el_ === 'ctrl') this.meta = true
+        else this.key = el_
+      }
+    } else {
+      this.shift = sequence.shiftKey
+      this.alt = sequence.altKey
+      this.meta = sequence.metaKey || sequence.ctrlKey
+      this.key = sequence.key.toLocaleLowerCase()
+    }
+  }
+
+  is(other: Sequence) {
+    return JSON.stringify(this) === JSON.stringify(other)
+  }
+}
 
 /**
- * CodeMirror paste handler extension, modify text to be pasted and where to put cursor
- * Uses ugly callback as we cannot wrap this in async and the Anki bridge uses a callback
+ * CodeMirror paste handler extension allowing custom pasting.
+ * Uses callback as we cannot wrap this in async and the Anki bridge uses a callback
  */
-export function custom_paste(handler: Handler) {
-  function _paste(view: EditorView, alt: boolean) {
-    handler(cb, alt)
+function customPaste(options: Options) {
+  
+  function _paste(view: EditorView, func: string) {
+
+    options.handler(view, func, cb)
     return true
 
     function cb(res: Result) {
@@ -38,20 +70,31 @@ export function custom_paste(handler: Handler) {
       })
     }
   }
+
+  function _type(seq: Sequence) {
+    for (const sc of options.shortcuts) {
+      if (seq.is(new Sequence(sc.shortcut))) return sc.name
+    }
+    return null
+  }
+
   return EditorView.domEventHandlers({
     paste(event, view) {
-      _paste(view, false)
+      const sc = _type(new Sequence("Ctrl+V"))
+      if (sc) _paste(view, sc)
       return true // CM-specific, first handler to return true stops further handling
     },
     keydown(event: KeyboardEvent, view) {
-      if (
-        (event.ctrlKey || event.metaKey) && event.shiftKey &&
-        event.key.toLocaleLowerCase() === 'v'
-      ) {
-        _paste(view, true)
+      console.log(`custom paste: ${event.ctrlKey ? "Ctrl+" : ""}${event.altKey ? "Alt+" : ""}${event.shiftKey ? "Shift+" : ""}${event.metaKey ? "Meta+" : ""}${event.key}`)
+      const sc = _type(new Sequence(event))
+      if (sc) {
+        _paste(view, sc)
         return true // CM-specific, first handler to return true stops further handling
       }
       return false
     }
   })
 }
+
+export type {Callback, Result, Options, Sequence}
+export {customPaste}
