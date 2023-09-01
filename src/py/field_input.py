@@ -3,7 +3,7 @@ from aqt import mw, gui_hooks, QKeySequence
 from aqt.utils import *
 from .constants import *
 from .version import strvercmp
-from .utils import clip_img_to_md, get_path
+from .utils import bridge_handler, get_path
 
 if tmp := re.match(r"^\s*((\d+\.)+\d+)", version_with_build()):
     ANKI_VER = tmp.group(1)
@@ -54,11 +54,12 @@ def add_srcs(web_content: aqt.webview.WebContent, context: object):
 
 ###########################################################################
 def bridge(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool, Any]:
-    """Bridge to handle image pasting - inserts in media library and returns the MD string"""
-    if message == 'clipboard_image_to_markdown':
-        file = clip_img_to_md()
-        return (True, file)
-
+    """
+    Bridge to handle pasting by making clipboard content available to JS side.
+    If the clipboard contains an image it is inserted in the media collection.
+    """
+    if res := bridge_handler(message):
+        return (True, res)
     return handled
 
 ###########################################################################

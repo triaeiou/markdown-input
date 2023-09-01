@@ -1,44 +1,57 @@
 import {Converter} from "anki-md-html"
-import type { Result, Callback, Handler } from "./CodeMirror.extensions/custom_paste"
+import type {Callback} from "./CodeMirror.extensions/custom_paste"
 
 /** Anki webview js-py bridge */
 declare function bridgeCommand(msg: string): void
 /** Anki webview js-py bridge with callback*/
-declare function bridgeCommand(msg: string, cb: (txt: string) => void): string
-
-/** Wrap bridgeCommand callback in awaitable promise */
-function bridge_promise(): Promise<string> {
-  return new Promise((resolve) => {
-    bridgeCommand("clipboard_image_to_markdown", (md) => {
-      resolve(md)
-    })    
-  })
+declare function bridgeCommand(msg: string, cb: (txt: string|object) => void): string
+interface Contents {
+  html: boolean
+  text: boolean
+  image: boolean
 }
 
-/** Custom paste handler  */
+/**
+ * Custom paste handler - uses py side logic through bridge to get clipboard
+ * content and insert images in media collection as needed.
+ */
 function paste_handler(
-  clipboard: DataTransfer,
-  callback: Callback,
   converter: Converter,
-  html: boolean,
-  image: boolean
+  default_paste: 'text'|'markdown',
+  callback: Callback,
+  alt: boolean
 ) {
-  // Check if HTML
-  let clip: string
-  if (html && (clip = clipboard?.getData('text/html'))) {
-    let md = converter.html_to_markdown(clip)
-    if (md) {
-      md = md.replace(/^\s*<!--StartFragment-->\s*(.*?)\s*<!--EndFragment-->\s*$/si, '$1')
-      callback({markdown: md, pos: md.length})
-    }
-  } else if (clip = clipboard.getData('text/plain')) {
-    callback({markdown: clip, pos: clip.length})
-  } else if (image) {
-    // Check if image
-    bridgeCommand("clipboard_image_to_markdown", (md) => {
-      if (md) callback({markdown: md, pos: 2})
-    })
+  function objectify(val: string|object): object {
+    return typeof(val) === 'object'
+      ? val
+      : JSON.parse(val)
   }
+  function stringify(val: string|object): string {
+    return typeof(val) === 'string'
+      ? val
+      : JSON.stringify(val)
+  }
+
+  bridgeCommand('clipboard-contents', (res) => {
+    // Unclear why aqt bridge returns JSON string and QWebChannel returns object
+    const contents = objectify(res) as Contents
+
+    if (((default_paste === 'markdown') !== alt) && contents.html) {
+      bridgeCommand('clipboard-html', (html: string) => {
+        const md = converter.html_to_markdown(html)
+        if (md) callback({text: md, pos: md.length})
+      })
+    } else if (contents.text) {
+      bridgeCommand('clipboard-text', (txt: string) => {
+        callback({text: txt, pos: txt.length})
+      })
+    } else if (contents.image) {
+      bridgeCommand('clipboard-image', (img: string) => {
+        // Alternate paste with image does nothing
+        if (img && !alt) callback({text: img, pos: img.length})
+      })
+    }
+  })
 }
 
 export {paste_handler}

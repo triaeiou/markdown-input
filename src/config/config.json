@@ -86,8 +86,7 @@
 			"wholeWord": false
 		},
 		"paste": {
-			"html": true,
-			"image": true
+			"default": "markdown"
 		}
 	},
 	"General": {

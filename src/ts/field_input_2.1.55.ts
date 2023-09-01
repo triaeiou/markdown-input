@@ -11,7 +11,7 @@ import { Editor, Configuration as CMConfiguration } from "./editor"
 import { Converter, Options as AnkiMdHtmlOptions } from "anki-md-html"
 import { paste_handler } from "./paste_handler"
 import { SelectionRange } from "@codemirror/state"
-import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_INPUT, PASTE, PASTE_HTML, PASTE_IMAGE, SC_TOGGLE } from "./constants"
+import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_INPUT, PASTE, DEFAULT, SC_TOGGLE } from "./constants"
 import { Callback } from "./CodeMirror.extensions/custom_paste"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -156,15 +156,12 @@ async function add_editor(field: EditorFieldAPI, hidden: boolean): Promise<MDInp
   container.hidden = hidden
   const tmp = {
     parent: container,
-    paste_handler: (clipboard: DataTransfer, callback: Callback) => {
-      return paste_handler(
-        clipboard,
-        callback,
-        _converter,
-        _config[EDITOR]?.[PASTE]?.[PASTE_HTML],
-        _config[EDITOR]?.[PASTE]?.[PASTE_IMAGE]
-      )
-    },
+    paste_handler: (callback: Callback, alt: boolean) => paste_handler(
+      _converter,
+      _config[EDITOR]?.[PASTE]?.[DEFAULT] === 'markdown' ? 'markdown' : 'text',
+      callback,
+      alt
+    ),
     oninput: (md: string) => {
       field.editingArea.content.set(_converter.markdown_to_html(md))
     },

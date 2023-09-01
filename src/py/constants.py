@@ -33,8 +33,7 @@ KEYMAP = "keymap"
 THEME = "Theme"
 SYNTAX = "Syntax highlighting"
 PASTE = "paste"
-PASTE_HTML = "html"
-PASTE_IMAGE = "image"
+DEFAULT = "default"
 
 # General
 GENERAL = "General"

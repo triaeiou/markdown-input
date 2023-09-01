@@ -31,8 +31,7 @@ export const KEYMAP = "keymap"
 export const THEME = "Theme"
 export const SYNTAX = "Syntax highlighting"
 export const PASTE = "paste"
-export const PASTE_HTML = "html"
-export const PASTE_IMAGE = "image"
+export const DEFAULT = "default"
 
 // General
 export const MDI = "MDI"
@@ -41,8 +40,7 @@ import { Options as AnkiMdHtmlOptions } from "anki-md-html"
 import { Configuration as CMConfiguration } from "./editor"
 interface EditorConfiguration extends CMConfiguration {
   paste: {
-    html?: boolean,
-    image?: boolean
+    default?: 'markdown'|'text'
   }
 }
 export interface Configuration {

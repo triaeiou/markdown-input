@@ -3,7 +3,7 @@ import aqt, os, json, base64, re
 from aqt.utils import *
 from aqt.qt import QObject, QShortcut, QRect, QMainWindow
 from .constants import *
-from .utils import clip_img_to_md, get_path
+from .utils import bridge_handler, get_path
 
 _config = {}
 _dlgs = {}
@@ -13,8 +13,9 @@ class Bridge(QObject):
     """Class to handle js bridge"""
     @pyqtSlot(str, result=str)
     def cmd(self, cmd):
-        if cmd == "clipboard_image_to_markdown":
-            return json.dumps(clip_img_to_md())
+        if res := bridge_handler(cmd):
+            return res
+        return None
 
 ###########################################################################
 class IM_window(QMainWindow):
@@ -65,7 +66,7 @@ class IM_window(QMainWindow):
                 var pycmd, bridgeCommand
                 new QWebChannel(qt.webChannelTransport, function(channel) {{
                     pycmd = bridgeCommand = function (cmd, cb = (() => {{}})) {{
-                        channel.objects.py.cmd(cmd, (res) => cb(JSON.parse(res)))
+                        channel.objects.py.cmd(cmd, cb)
                         return false
                     }}
                 }})

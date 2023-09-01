@@ -15,7 +15,6 @@ import {custom_paste} from "./CodeMirror.extensions/custom_paste"
 import {to_function} from "./commands"
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
 import { cloze_decorator } from "./CodeMirror.extensions/cloze_decorator"
-import { modifiers } from "./CodeMirror.extensions/modifiers"
 
 /** CodeMirror instance configuration */
 interface Shortcut {
@@ -92,7 +91,6 @@ class Editor {
         ])
       ),
       EditorView.lineWrapping,
-      modifiers,
       markdown({base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages})
     ]
     if (cfg.paste_handler) this.extensions.push(custom_paste(cfg.paste_handler))

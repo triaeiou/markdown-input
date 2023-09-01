@@ -24,7 +24,7 @@ export default [
     input: "src/ts/field_input.ts",
     plugins: plugins,
     output: output
-  }/* ,
+  },
   {
     input: "src/ts/window_input.ts",
     plugins: plugins,
@@ -34,5 +34,5 @@ export default [
     input: "src/ts/field_input_2.1.55.ts",
     plugins: plugins,
     output: output
-  } */
+  }
 ]
