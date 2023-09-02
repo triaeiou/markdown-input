@@ -24,7 +24,8 @@ interface Configuration {
     caseSensitive?: boolean
     regexp?: boolean
     wholeWord?: boolean
-  }
+  },
+  paste?: Object
 }
 
 const lezer_exts = [
@@ -35,9 +36,14 @@ const lezer_exts = [
   Underline
 ]
 
+const logger = (view: EditorView) => {
+  console.log("ping!")
+  return true
+}
+
 class Editor {
   cm: EditorView
-  extensions: Extension|LanguageSupport|ViewPlugin<any>[]
+  extensions: (Extension|LanguageSupport|ViewPlugin<any>)[]
 
   constructor(cfg: Configuration) {
     this.extensions = [
@@ -58,7 +64,12 @@ class Editor {
       indentUnit.of("    "),
       Prec.highest(
         keymap.of([
-          ...cfg.keymap,
+          {
+            key: "Mod-v",
+            run: logger,
+            preventDefault: true        
+          },
+          //...cfg.keymap,
           ...closeBracketsKeymap,
           ...markdownKeymap,
           ...defaultKeymap,
@@ -68,9 +79,9 @@ class Editor {
         ])
       ),
       EditorView.lineWrapping,
-      markdown({base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages})
+      markdown({base: markdownLanguage, extensions: lezer_exts, codeLanguages: languages}),
+      ...cfg.extensions
     ]
-    if (cfg.extensions) this.extensions.concat(cfg.extensions)
 
     const editor_view = {
       state: EditorState.create({extensions: this.extensions}),

@@ -81,37 +81,21 @@
 				"key": "Mod-Shift-j",
 				"run": "joinLines",
 				"preventDefault": true
-			},{
-				"key": "Ctrl-v",
-				"run": "pasteMarkdown",
-				"preventDefault": true
-			},{
-				"key": "Ctrl-Shift-u",
-				"run": "pasteMarkdownStrip",
-				"preventDefault": true
-			},{
-				"key": "Ctrl-Shift-Alt-v",
-				"run": "pasteMarkdownAppend",
-				"preventDefault": true
-			},{
-				"key": "Ctrl-Shift-v",
-				"run": "pasteText",
-				"preventDefault": true
-			},{
-				"key": "Ctrl-Shift-Alt-u",
-				"run": "pasteTextStrip",
-				"preventDefault": true
-			},{
-				"key": "Ctrl-Shift-Alt-g",
-				"run": "pasteTextAppend",
-				"preventDefault": true
 			}
 		],
 		"search": {
 			"caseSensitive": false,
 			"regexp": true,
 			"wholeWord": false
-		}
+		},
+		"paste": {
+			"pasteMarkdown": "Ctrl-v",
+			"pasteMarkdownStrip": "Ctrl-Shift-u",
+			"pasteMarkdownAppend": "Ctrl-Shift-Alt-v",
+			"pasteText": "Ctrl-Shift-v",
+			"pasteTextStrip": "Ctrl-Shift-Alt-u",
+			"pasteTextAppend": "Ctrl-Shift-Alt-g"
+		}			
 	},
 	"General": {
 		"Browser sort field": true

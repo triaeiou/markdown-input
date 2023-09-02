@@ -12,6 +12,18 @@ interface Contents {
   text: boolean
   image: boolean
 }
+/** Paste key bindings */
+interface PasteKeyBindings {
+  pasteMarkdown?: string,
+  pasteMarkdownStrip?: string,
+  pasteMarkdownAppend?: string,
+  pasteText?: string,
+  pasteTextStrip?: string,
+  pasteTextAppend?: string
+}
+
+let _converter: Converter = null
+const platform = 'win'
 
 function _paste(
   view: EditorView,
@@ -68,18 +80,26 @@ function _paste(
   bridgeCommand('clipboard-contents', (res) => {
     // Unclear why aqt bridge returns JSON string and QWebChannel returns object
     const contents = objectify(res) as Contents
+    console.log("got clipboard contents")
 
     if (contents.html && format === 'md') {
+      console.log("getting clipboard html")
       bridgeCommand('clipboard-html', (html: string) => {
-        let md = this['converter'].html_to_markdown(html)
+        console.log("got clipboard html: " + html)
+        let md = _paste['converter'].html_to_markdown(html)
         if (md) {
+          console.log("converted clipboard html to md: " + md)
           md = tr(transform, md)
+          console.log("transformed md:" + md)
           write_to_dom(md, md.length)
         }
       })
-    } else if (contents.text && format === 'txt') {
+    } else if (contents.text) {
+      console.log("getting clipboard text")
       bridgeCommand('clipboard-text', (txt: string) => {
+        console.log("got clipboard text: " + txt)
         txt = tr(transform, txt)
+        console.log("transformed text:" + txt)
         write_to_dom(txt, txt.length)
       })
     } else if (contents.image && format === 'md') {
@@ -92,39 +112,68 @@ function _paste(
   return true
 }
 
-const pasteMarkdown = (view: EditorView) => _paste(view, 'md')
-const pasteMarkdownStrip = (view: EditorView) => _paste(view, 'md', 'strip')
-const pasteMarkdownAppend = (view: EditorView) => _paste(view, 'md', 'append')
-const pasteText = (view: EditorView) => _paste(view, 'txt')
-const pasteTextStrip = (view: EditorView) => _paste(view, 'txt', 'strip')
-const pasteTextAppend = (view: EditorView) => _paste(view, 'txt', 'append')
-const customPaste = (converter: Converter) => {
+const normalize = (kb: string|KeyboardEvent) => {
+  let result, alt, ctrl, shift, meta
+  if (typeof(kb) === 'string'){
+    const parts = kb.split(/-(?!$)/)
+    result = parts[parts.length - 1]
+    if (result == "Space") result = " "  
+    for (let i = 0; i < parts.length - 1; ++i) {
+      const mod = parts[i]
+      if (/^(cmd|meta|m)$/i.test(mod)) meta = true
+      else if (/^a(lt)?$/i.test(mod)) alt = true
+      else if (/^(c|ctrl|control)$/i.test(mod)) ctrl = true
+      else if (/^s(hift)?$/i.test(mod)) shift = true
+      else if (/^mod$/i.test(mod)) ctrl = true//platform === "mac" ? meta = true : ctrl = true 
+      else throw new Error("Unrecognized modifier name: " + mod)
+    }
+  } else if (typeof(kb) === 'object') {
+    result = kb.key
+    alt = kb.altKey
+    ctrl = kb.ctrlKey
+    meta = kb.metaKey
+    shift = kb.shiftKey
+  }
+  if (alt) result = "Alt-" + result
+  if (ctrl) result = "Ctrl-" + result
+  if (meta) result = "Meta-" + result
+  if (shift) result = "Shift-" + result
+
+  return result
+}
+
+const normalize_keybindings = (kb: PasteKeyBindings): PasteKeyBindings => {
+  for (const k of Object.keys(kb)) kb[k] = normalize(kb[k])
+  return kb
+}
+const pasteMarkdown = (view: EditorView) => {return _paste(view, 'md')}
+const pasteMarkdownStrip = (view: EditorView) => {return _paste(view, 'md', 'strip')}
+const pasteMarkdownAppend = (view: EditorView) => {return _paste(view, 'md', 'append')}
+const pasteText = (view: EditorView) => {return _paste(view, 'txt')}
+const pasteTextStrip = (view: EditorView) => {return _paste(view, 'txt', 'strip')}
+const pasteTextAppend = (view: EditorView) => {return _paste(view, 'txt', 'append')}
+const customPaste = (converter: Converter, key_bindings: PasteKeyBindings) => {
   _paste['converter'] = converter
+  key_bindings = normalize_keybindings(key_bindings)
+  console.log('parsed bindings ' + JSON.stringify(key_bindings))
   return EditorView.domEventHandlers({
     // Override built-in paste
-    paste(event, view) {
+    /*paste(event, view) {
+      console.log("core paste in custom_paste called")
       return true // CM-specific, first handler to return true stops further handling
-    }
+    }/*,
+    keydown(e: KeyboardEvent, view) {
+      if (!e.key) return false
+      const key = normalize(e)
+      console.log("custom paste checking " + key + " against " + JSON.stringify(key_bindings))
+      if (key in key_bindings) {
+        key_bindings[key](view)
+        return true // CM-specific, first handler to return true stops further handling
+      }
+      return false
+    }*/
   })
 }
 
-
-/*
-return EditorView.domEventHandlers({
-  paste(event, view) {
-    const sc = _type(new Sequence("Ctrl+V"))
-    if (sc) _paste(view, sc)
-    return true // CM-specific, first handler to return true stops further handling
-  },
-  keydown(event: KeyboardEvent, view) {
-    console.log(`custom paste: ${event.ctrlKey ? "Ctrl+" : ""}${event.altKey ? "Alt+" : ""}${event.shiftKey ? "Shift+" : ""}${event.metaKey ? "Meta+" : ""}${event.key}`)
-    const sc = _type(new Sequence(event))
-    if (sc) {
-      _paste(view, sc)
-      return true // CM-specific, first handler to return true stops further handling
-    }
-    return false
-  }
-})
-*/
+export type {PasteKeyBindings}
 export {customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip}

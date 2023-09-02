@@ -3,7 +3,7 @@ import type { EditorView } from "./editor"
 import { Converter } from "anki-md-html"
 import { customPaste } from "./custom_paste"
 import { Configuration, CONVERTER, WINDOW_INPUT, WINDOW_MODE, EDITOR, KEYMAP } from "./constants"
-import { parse_keymap } from "./commands"
+import { parse_keymap } from "./config"
 
 class WindowEditor {
   editor: Editor

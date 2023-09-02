@@ -4,11 +4,11 @@ import { EditorView, KeyBinding } from "@codemirror/view"
 import { Editor } from "./editor"
 import { Converter } from "anki-md-html"
 import { ancestor } from "./utils"
-import { customPaste } from "./custom_paste"
+import { customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip, PasteKeyBindings } from "./custom_paste"
 import { CustomInputClass } from "./custom_input"
-import { parse_keymap } from "./commands"
+import { parse_config } from "./config"
 import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_DEFAULT, FIELD_INPUT,
-  SC_TOGGLE, HIDE_TOOL, MDI, Configuration, KEYMAP } from "./constants"
+  SC_TOGGLE, HIDE_TOOL, MDI, Configuration, KEYMAP, PASTE, SEARCH } from "./constants"
 
 const MD = '<!--?xml version="1.0" encoding="UTF-8"?--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="mdi-md-hollow" width="24" height="24" viewBox="0 0 208 128"><path clip-rule="evenodd" d="m15 10c-2.7614 0-5 2.2386-5 5v98c0 2.761 2.2386 5 5 5h178c2.761 0 5-2.239 5-5v-98c0-2.7614-2.239-5-5-5zm-15 5c0-8.28427 6.71573-15 15-15h178c8.284 0 15 6.71573 15 15v98c0 8.284-6.716 15-15 15h-178c-8.28427 0-15-6.716-15-15z" fill-rule="evenodd"/><path d="m30 98v-68h20l20 25 20-25h20v68h-20v-39l-20 25-20-25v39zm125 0-30-33h20v-35h20v35h20z"/></svg>'
 
@@ -58,18 +58,15 @@ function create_editor(parent: HTMLDivElement, onchange: (html: string) => void)
     }
   }
 
-  const exts = [
-    EditorView.domEventHandlers(domEventHandlers), // Handlers for scrolling and hide toolbar
-    customPaste(_converter)
-  ]
-  const km = parse_keymap(_config[EDITOR][KEYMAP])
-  const cfg = _config[EDITOR]
   return new Editor({
     parent: parent,
-    extensions: exts,
-    keymap: km,
+    extensions: [
+      EditorView.domEventHandlers(domEventHandlers), // Handlers for scrolling and hide toolbar
+      customPaste(_converter, _config[EDITOR][PASTE])  
+    ],
+    keymap: _config[EDITOR][KEYMAP],
     oninput: (md: string) => onchange(_converter.markdown_to_html(md)),
-    ..._config[EDITOR]
+    search: _config[EDITOR][SEARCH]
   })
 }
 
@@ -111,7 +108,7 @@ function onadd() {
 /////////////////////////////////////////////////////////////////////////////
 // Setup event listeners and configuration - create CM instances only on demand
 function init(cfg: Configuration) {
-  _config = cfg
+  _config = parse_config(cfg)
   _converter = new Converter(_config[CONVERTER])
   let tip = "Toggle Markdown input"
   if (_config[FIELD_INPUT]?.[SC_TOGGLE]) tip += ` (${_config[FIELD_INPUT][SC_TOGGLE]})`

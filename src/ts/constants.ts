@@ -30,18 +30,17 @@ export const EDITOR = "CodeMirror"
 export const KEYMAP = "keymap"
 export const THEME = "Theme"
 export const SYNTAX = "Syntax highlighting"
+export const SEARCH = "search"
 export const PASTE = "paste"
-export const DEFAULT = "default"
 
 // General
 export const MDI = "MDI"
 
 import { Options as AnkiMdHtmlOptions } from "anki-md-html"
 import { Configuration as CMConfiguration } from "./editor"
+import { PasteKeyBindings } from "./custom_paste"
 interface EditorConfiguration extends CMConfiguration {
-  paste: {
-    default?: 'markdown'|'text'
-  }
+  paste: PasteKeyBindings
 }
 export interface Configuration {
   'Field input': {},

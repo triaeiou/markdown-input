@@ -9,17 +9,18 @@ def bridge_handler(msg: str) -> str:
     """
     Handle bridge messages
     """
+
+    mime = QApplication.clipboard().mimeData(QClipboard.Mode.Clipboard)
     if msg == 'clipboard-contents':
-        mime = QApplication.clipboard().mimeData(QClipboard.Mode.Clipboard)
         return json.dumps({
             'image': mime.hasImage(),
             'text': mime.hasText(),
             'html': mime.hasHtml()
         })
     elif msg == 'clipboard-html':
-        return json.dumps(clean(mime.html()))
+        return clean(mime.html())
     elif msg == 'clipboard-text':
-        return json.dumps(mime.text())
+        return mime.text()
     elif msg == 'clipboard-image':
         if mime.hasImage():
             im = QImage(mime.imageData())
