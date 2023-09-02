@@ -82,7 +82,7 @@
 				"run": "joinLines",
 				"preventDefault": true
 			},{
-				"key": "Mod+v",
+				"key": "Mod-v",
 				"run": "pasteMarkdownAppend",
 				"preventDefault": true
 			}

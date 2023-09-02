@@ -20,4 +20,17 @@ function parse_config(cfg: Configuration): Configuration {
   return cfg
 }
 
-export {parse_config}
+function parse_km(km) {
+  if (!parse_config['functions']) {
+    parse_config['functions'] = {}
+    for (const namespace of [commands, search, cloze, join_lines, custom_paste])
+      for (const [k, v] of Object.entries(namespace)) parse_config['functions'][k] = v
+  }
+
+  for (const sc of km) {
+    if('shift' in sc && typeof(sc.shift) !== 'function') sc.shift = parse_config['functions'][sc.shift]
+    if('run' in sc && typeof(sc.run) !== 'function') sc.run = parse_config['functions'][sc.run]
+  }
+}
+
+export {parse_config, parse_km}

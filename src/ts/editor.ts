@@ -42,11 +42,14 @@ const ping = (view: EditorView) => {
   return true
 }
 
+import { parse_km } from "./config"
 class Editor {
   cm: EditorView
   extensions: (Extension|LanguageSupport|ViewPlugin<any>)[]
 
   constructor(cfg: Configuration) {
+    //parse_km(cfg.keymap)
+
     console.log("=== KEYMAP ===")
     for (const k of cfg.keymap) {
       console.log("  " + JSON.stringify(k) + ": " + k.run.name + " (" + k.run.toString() + ")")
@@ -92,7 +95,7 @@ class Editor {
           },*/
           {
             key: "Mod-Shift-p",
-            run: pasteMarkdownStrip,
+            run: pasteMarkdownAppend,
             preventDefault: true        
           },
           ...cfg.keymap,
