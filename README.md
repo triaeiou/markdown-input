@@ -8,7 +8,7 @@ Anki ([GitHub](https://github.com/ankitects/anki)) addon ([GitHub](https://githu
 
 ## Anki version note (2.1.56+)
 
-The editor DOM and internal functioning which `Markdown input` depends on changed in Anki version 2.1.56. The current version of `Markdown input` ships with both 2.1.56+ compatible code as well as the last [release](https://github.com/TRIAEIOU/Markdown-input/releases/tag/v1.2.5) targeted at 2.1.55. Going forward no updates/fixes will be made to the legacy code, any development/bug fixes will be in the 2.1.56+ code.
+The editor DOM and internal functioning which `Markdown input` depends on changed in Anki version 2.1.56. The current version of `Markdown input` only supports 2.1.56+, the last [release](https://github.com/TRIAEIOU/Markdown-input/releases/tag/v1.2.5) targeted at 2.1.55 is available as a separate branch but no further updates or bug fixes will be made in that branch.
 
 ## Warning
 

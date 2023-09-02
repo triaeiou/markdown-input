@@ -1,9 +1,9 @@
 import { Editor } from "./editor"
 import type { EditorView } from "./editor"
 import { Converter } from "anki-md-html"
-import { paste_handler } from "./paste_handler"
-import { Configuration, CONVERTER, WINDOW_INPUT, WINDOW_MODE, EDITOR, PASTE, DEFAULT } from "./constants"
-import { Callback } from "./CodeMirror.extensions/custom_paste"
+import { customPaste } from "./custom_paste"
+import { Configuration, CONVERTER, WINDOW_INPUT, WINDOW_MODE, EDITOR, KEYMAP } from "./constants"
+import { parse_keymap } from "./commands"
 
 class WindowEditor {
   editor: Editor
@@ -12,14 +12,15 @@ class WindowEditor {
   constructor(parent: HTMLElement, cfg: Configuration) {
     Object.assign(this, cfg)
     this.converter = new Converter(this[CONVERTER])
+    const exts = [
+      customPaste(this.converter)
+    ]
+    const km = parse_keymap(this[EDITOR][KEYMAP])
+
     this.editor = new Editor({
       parent: parent,
-      paste_handler: (view: EditorView, func: string, callback: Callback) => paste_handler(
-        this.converter,
-        view,
-        func,
-        callback
-      ),
+      extensions: exts,
+      keymap: km,
       ...this[EDITOR]
     })
   }

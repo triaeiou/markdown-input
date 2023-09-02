@@ -32,18 +32,11 @@ def add_srcs(web_content: aqt.webview.WebContent, context: object):
         return
     addon = mw.addonManager.addonFromModule(__name__)
     # Defer script to allow bridgeCommand to be defined
-    if strvercmp(ANKI_VER, "2.1.55") > 0: # Current version
-        web_content.head += f"""
-            <script src="/_addons/{addon}/field_input.js"></script>
-            <link rel=stylesheet href="/_addons/{addon}/mdi.css">
-            <link rel=stylesheet href="/_addons/{addon}/{get_path('cm.css')}">
-        """
-    else: # Legacy, not updated
-        web_content.head += f"""
-            <script src="/_addons/{addon}/field_input_2.1.55.js"></script>
-            <link rel=stylesheet href="/_addons/{addon}/mdi.css">
-            <link rel=stylesheet href="/_addons/{addon}/{get_path('cm.css')}">
-        """
+    web_content.head += f"""
+        <script src="/_addons/{addon}/field_input.js"></script>
+        <link rel=stylesheet href="/_addons/{addon}/mdi.css">
+        <link rel=stylesheet href="/_addons/{addon}/{get_path('cm.css')}">
+    """
 
     # Configure Unified and CodeMirror - after script load but before cm instantiation
     web_content.body += f'''

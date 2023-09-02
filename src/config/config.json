@@ -66,33 +66,47 @@
 				"scope": "editor search-panel",
 				"preventDefault": true
 			},{
-				"key": "Mod-Shift-z",
+				"key": "Ctrl-Alt-c",
 				"run": "clozeCurrent",
 				"preventDefault": true
 			},{
 				"key": "Mod-Shift-c",
 				"run": "clozeNext",
 				"preventDefault": true
-			},
-			{
+			},{
+				"key": "Ctrl-Shift-Alt-c",
+				"run": "unclozeSelections",
+				"preventDefault": true
+			},{
 				"key": "Mod-Shift-j",
 				"run": "joinLines",
 				"preventDefault": true
-			},
-			{
-				"key": "Mod-Shift-u",
-				"run": "unclozeSelections",
+			},{
+				"key": "Ctrl-v",
+				"run": "pasteMarkdown",
+				"preventDefault": true
+			},{
+				"key": "Ctrl-Shift-u",
+				"run": "pasteMarkdownStrip",
+				"preventDefault": true
+			},{
+				"key": "Ctrl-Shift-Alt-v",
+				"run": "pasteMarkdownAppend",
+				"preventDefault": true
+			},{
+				"key": "Ctrl-Shift-v",
+				"run": "pasteText",
+				"preventDefault": true
+			},{
+				"key": "Ctrl-Shift-Alt-u",
+				"run": "pasteTextStrip",
+				"preventDefault": true
+			},{
+				"key": "Ctrl-Shift-Alt-g",
+				"run": "pasteTextAppend",
 				"preventDefault": true
 			}
 		],
-		"paste": {
-			"markdown": "",
-			"markdownStripClozes": "",
-			"markdownAppendClozes": "",
-			"text": "",
-			"textStripClozes": "",
-			"textAppendClozes": ""
-		},
 		"search": {
 			"caseSensitive": false,
 			"regexp": true,

@@ -1,14 +1,14 @@
 // @ts-ignore FIXME: how to import correctly?
 import type { EditorFieldAPI } from "anki/ts/editor/EditorField.svelte"
-import { EditorView } from "@codemirror/view"
+import { EditorView, KeyBinding } from "@codemirror/view"
 import { Editor } from "./editor"
 import { Converter } from "anki-md-html"
 import { ancestor } from "./utils"
-import { paste_handler } from "./paste_handler"
+import { customPaste } from "./custom_paste"
 import { CustomInputClass } from "./custom_input"
+import { parse_keymap } from "./commands"
 import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_DEFAULT, FIELD_INPUT,
-  SC_TOGGLE, HIDE_TOOL, MDI, Configuration } from "./constants"
-import type { Callback } from "./CodeMirror.extensions/custom_paste"
+  SC_TOGGLE, HIDE_TOOL, MDI, Configuration, KEYMAP } from "./constants"
 
 const MD = '<!--?xml version="1.0" encoding="UTF-8"?--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="mdi-md-hollow" width="24" height="24" viewBox="0 0 208 128"><path clip-rule="evenodd" d="m15 10c-2.7614 0-5 2.2386-5 5v98c0 2.761 2.2386 5 5 5h178c2.761 0 5-2.239 5-5v-98c0-2.7614-2.239-5-5-5zm-15 5c0-8.28427 6.71573-15 15-15h178c8.284 0 15 6.71573 15 15v98c0 8.284-6.716 15-15 15h-178c-8.28427 0-15-6.716-15-15z" fill-rule="evenodd"/><path d="m30 98v-68h20l20 25 20-25h20v68h-20v-39l-20 25-20-25v39zm125 0-30-33h20v-35h20v35h20z"/></svg>'
 
@@ -19,27 +19,32 @@ let _editor_count: number
 /////////////////////////////////////////////////////////////////////////////
 // Non-arrow function (for `this` use) to instantiate an editor instance
 function create_editor(parent: HTMLDivElement, onchange: (html: string) => void) {
-  const events = {
-    wheel(evt: WheelEvent) {
-      const fields = ancestor(parent, '.fields')
-      switch (evt.deltaMode) {
-        case 0: //DOM_DELTA_PIXEL
-          fields.scrollTop += evt.deltaY
-          fields.scrollLeft += evt.deltaX
-          break
-        case 1: //DOM_DELTA_LINE
-          fields.scrollTop += 15 * evt.deltaY
-          fields.scrollLeft += 15 * evt.deltaX
-          break
-        case 2: //DOM_DELTA_PAGE
-          fields.scrollTop += 0.03 * evt.deltaY
-          fields.scrollLeft += 0.03 * evt.deltaX
-          break
-      }
+
+  // Config for editor extension domEventHandlers
+  const domEventHandlers = {}
+
+  // Handler for wheel scrolling
+  domEventHandlers['wheel'] = function (evt: WheelEvent) {
+    const fields = ancestor(parent, '.fields')
+    switch (evt.deltaMode) {
+      case 0: //DOM_DELTA_PIXEL
+        fields.scrollTop += evt.deltaY
+        fields.scrollLeft += evt.deltaX
+        break
+      case 1: //DOM_DELTA_LINE
+        fields.scrollTop += 15 * evt.deltaY
+        fields.scrollLeft += 15 * evt.deltaX
+        break
+      case 2: //DOM_DELTA_PAGE
+        fields.scrollTop += 0.03 * evt.deltaY
+        fields.scrollLeft += 0.03 * evt.deltaX
+        break
     }
   }
+
+  // Handler for toggling toolbar visibility
   if (_config[FIELD_INPUT]?.[HIDE_TOOL]) {
-    events['focusout'] = function (evt) {
+    domEventHandlers['focusout'] = function (evt) {
       if (
         ancestor((evt.relatedTarget as HTMLElement), `.note-editor`) &&
         !ancestor((evt.relatedTarget as HTMLElement), `.${parent.className}`)
@@ -47,25 +52,23 @@ function create_editor(parent: HTMLDivElement, onchange: (html: string) => void)
         (document.querySelector('.editor-toolbar') as HTMLElement).hidden = false
       }
     }
-    events['focusin'] = function (evt) {
+    domEventHandlers['focusin'] = function (evt) {
       if (ancestor((evt.target as HTMLElement), `.${parent.className}`))
         (document.querySelector('.editor-toolbar') as HTMLElement).hidden = true
     }
   }
 
+  const exts = [
+    EditorView.domEventHandlers(domEventHandlers), // Handlers for scrolling and hide toolbar
+    customPaste(_converter)
+  ]
+  const km = parse_keymap(_config[EDITOR][KEYMAP])
+  const cfg = _config[EDITOR]
   return new Editor({
     parent: parent,
-    paste_options: {
-      handler: (view: EditorView, func: string, callback: Callback) => paste_handler(
-        _converter,
-        view,
-        func,
-        callback
-      ),
-      shortcuts: []
-    },
+    extensions: exts,
+    keymap: km,
     oninput: (md: string) => onchange(_converter.markdown_to_html(md)),
-    events: events,
     ..._config[EDITOR]
   })
 }

@@ -118,7 +118,7 @@ function clozeCurrent(view: EditorView) {
 
 /** Remove clozes in selections */
 function unclozeSelections(view: EditorView) {
-
+  console.log("uncloze not yet implemented...")
 }
 
 export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections}
