@@ -3,24 +3,19 @@ import * as search from "search"
 import * as cloze from "./CodeMirror.extensions/cloze"
 import * as join_lines from "./CodeMirror.extensions/join_lines"
 import * as custom_paste from "./custom_paste"
-import { Configuration, EDITOR, KEYMAP, PASTE } from "./constants"
-
-const _fns: any[] = []
-function _to_function(name: string) {
-  if (!_fns.length)
-    for (const namespace of [commands, search, cloze, join_lines, custom_paste])
-      for (const [k, v] of Object.entries(namespace)) _fns[k] = v
-
-  return _fns[name]
-}
+import { Configuration, EDITOR, KEYMAP } from "./constants"
 
 function parse_config(cfg: Configuration): Configuration {
-  for (const sc of cfg[EDITOR][KEYMAP]) {
-    if('shift' in sc && typeof(sc.shift) !== 'function') sc.shift = _to_function(sc.shift as any)
-    if('run' in sc && typeof(sc.run) !== 'function') sc.run = _to_function(sc.run as any)
+  if (!parse_config['functions']) {
+    parse_config['functions'] = {}
+    for (const namespace of [commands, search, cloze, join_lines, custom_paste])
+      for (const [k, v] of Object.entries(namespace)) parse_config['functions'][k] = v
   }
-  for (const k of Object.keys(cfg[EDITOR][PASTE]))
-    cfg[EDITOR][PASTE][k] = _to_function(cfg[EDITOR][PASTE][k])
+  
+  for (const sc of cfg[EDITOR][KEYMAP]) {
+    if('shift' in sc && typeof(sc.shift) !== 'function') sc.shift = parse_config['functions'][sc.shift]
+    if('run' in sc && typeof(sc.run) !== 'function') sc.run = parse_config['functions'][sc.run]
+  }
 
   return cfg
 }

@@ -12,24 +12,8 @@ interface Contents {
   text: boolean
   image: boolean
 }
-/** Paste key bindings */
-interface PasteKeyBindings {
-  pasteMarkdown?: string,
-  pasteMarkdownStrip?: string,
-  pasteMarkdownAppend?: string,
-  pasteText?: string,
-  pasteTextStrip?: string,
-  pasteTextAppend?: string
-}
 
-let _converter: Converter = null
-const platform = 'win'
-
-function _paste(
-  view: EditorView,
-  format: 'md'|'txt',
-  transform?: 'strip'|'append'
-) {
+function _paste(view: EditorView, format: 'md'|'txt', transform?: 'strip'|'append') {
 
   function objectify(val: string|object): object {
     return typeof(val) === 'object'
@@ -112,68 +96,25 @@ function _paste(
   return true
 }
 
-const normalize = (kb: string|KeyboardEvent) => {
-  let result, alt, ctrl, shift, meta
-  if (typeof(kb) === 'string'){
-    const parts = kb.split(/-(?!$)/)
-    result = parts[parts.length - 1]
-    if (result == "Space") result = " "  
-    for (let i = 0; i < parts.length - 1; ++i) {
-      const mod = parts[i]
-      if (/^(cmd|meta|m)$/i.test(mod)) meta = true
-      else if (/^a(lt)?$/i.test(mod)) alt = true
-      else if (/^(c|ctrl|control)$/i.test(mod)) ctrl = true
-      else if (/^s(hift)?$/i.test(mod)) shift = true
-      else if (/^mod$/i.test(mod)) ctrl = true//platform === "mac" ? meta = true : ctrl = true 
-      else throw new Error("Unrecognized modifier name: " + mod)
-    }
-  } else if (typeof(kb) === 'object') {
-    result = kb.key
-    alt = kb.altKey
-    ctrl = kb.ctrlKey
-    meta = kb.metaKey
-    shift = kb.shiftKey
-  }
-  if (alt) result = "Alt-" + result
-  if (ctrl) result = "Ctrl-" + result
-  if (meta) result = "Meta-" + result
-  if (shift) result = "Shift-" + result
-
-  return result
+const customPaste = (converter: Converter) => {
+  _paste['converter'] = converter
+  return []
 }
 
-const normalize_keybindings = (kb: PasteKeyBindings): PasteKeyBindings => {
-  for (const k of Object.keys(kb)) kb[k] = normalize(kb[k])
-  return kb
-}
 const pasteMarkdown = (view: EditorView) => {return _paste(view, 'md')}
 const pasteMarkdownStrip = (view: EditorView) => {return _paste(view, 'md', 'strip')}
 const pasteMarkdownAppend = (view: EditorView) => {return _paste(view, 'md', 'append')}
 const pasteText = (view: EditorView) => {return _paste(view, 'txt')}
 const pasteTextStrip = (view: EditorView) => {return _paste(view, 'txt', 'strip')}
 const pasteTextAppend = (view: EditorView) => {return _paste(view, 'txt', 'append')}
-const customPaste = (converter: Converter, key_bindings: PasteKeyBindings) => {
-  _paste['converter'] = converter
-  key_bindings = normalize_keybindings(key_bindings)
-  console.log('parsed bindings ' + JSON.stringify(key_bindings))
-  return EditorView.domEventHandlers({
-    // Override built-in paste
-    /*paste(event, view) {
-      console.log("core paste in custom_paste called")
-      return true // CM-specific, first handler to return true stops further handling
-    }/*,
-    keydown(e: KeyboardEvent, view) {
-      if (!e.key) return false
-      const key = normalize(e)
-      console.log("custom paste checking " + key + " against " + JSON.stringify(key_bindings))
-      if (key in key_bindings) {
-        key_bindings[key](view)
-        return true // CM-specific, first handler to return true stops further handling
-      }
-      return false
-    }*/
-  })
-}
 
-export type {PasteKeyBindings}
+/* 
+function pasteMarkdown(view: EditorView) {return _paste(view, 'md')}
+function pasteMarkdownStrip(view: EditorView) {return _paste(view, 'md', 'strip')}
+function pasteMarkdownAppend(view: EditorView) {return _paste(view, 'md', 'append')}
+function pasteText(view: EditorView) {return _paste(view, 'txt')}
+function pasteTextStrip(view: EditorView) {return _paste(view, 'txt', 'strip')}
+function pasteTextAppend(view: EditorView) {return _paste(view, 'txt', 'append')}
+*/
+
 export {customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip}

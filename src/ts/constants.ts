@@ -38,12 +38,8 @@ export const MDI = "MDI"
 
 import { Options as AnkiMdHtmlOptions } from "anki-md-html"
 import { Configuration as CMConfiguration } from "./editor"
-import { PasteKeyBindings } from "./custom_paste"
-interface EditorConfiguration extends CMConfiguration {
-  paste: PasteKeyBindings
-}
 export interface Configuration {
   'Field input': {},
   'Converter': AnkiMdHtmlOptions,
-  'CodeMirror': EditorConfiguration
+  'CodeMirror': CMConfiguration
 }

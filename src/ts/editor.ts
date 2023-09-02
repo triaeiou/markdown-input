@@ -13,6 +13,8 @@ import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
 import {clozeDecorator} from "./CodeMirror.extensions/cloze"
 
+import { pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip } from "./custom_paste"
+
 /** CodeMirror instance configuration */
 
 interface Configuration {
@@ -24,8 +26,7 @@ interface Configuration {
     caseSensitive?: boolean
     regexp?: boolean
     wholeWord?: boolean
-  },
-  paste?: Object
+  }
 }
 
 const lezer_exts = [
@@ -36,7 +37,7 @@ const lezer_exts = [
   Underline
 ]
 
-const logger = (view: EditorView) => {
+const ping = (view: EditorView) => {
   console.log("ping!")
   return true
 }
@@ -46,6 +47,11 @@ class Editor {
   extensions: (Extension|LanguageSupport|ViewPlugin<any>)[]
 
   constructor(cfg: Configuration) {
+    console.log("=== KEYMAP ===")
+    for (const k of cfg.keymap) {
+      console.log("  " + JSON.stringify(k) + ": " + k.run.name + " (" + k.run.toString() + ")")
+    }
+
     this.extensions = [
       history(),
       dropCursor(),
@@ -64,12 +70,42 @@ class Editor {
       indentUnit.of("    "),
       Prec.highest(
         keymap.of([
-          {
+          /*{
             key: "Mod-v",
-            run: logger,
+            run: pasteMarkdown,
             preventDefault: true        
           },
-          //...cfg.keymap,
+          {
+            key: "Mod-Shift-v",
+            run: pasteMarkdownAppend,
+            preventDefault: true        
+          },
+          {
+            key: "Mod-Alt-v",
+            run: pasteMarkdownAppend,
+            preventDefault: true        
+          },
+          {
+            key: "Mod-Alt-v",
+            run: ping,
+            preventDefault: true        
+          },*/
+          {
+            key: "Mod-Shift-p",
+            run: pasteMarkdownStrip,
+            preventDefault: true        
+          },
+          ...cfg.keymap,
+          ...closeBracketsKeymap,
+          ...markdownKeymap,
+          ...defaultKeymap,
+          indentWithTab,
+          ...historyKeymap,
+          ...completionKeymap
+        ])
+      ),
+      Prec.high(
+        keymap.of([
           ...closeBracketsKeymap,
           ...markdownKeymap,
           ...defaultKeymap,

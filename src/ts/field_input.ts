@@ -4,7 +4,7 @@ import { EditorView, KeyBinding } from "@codemirror/view"
 import { Editor } from "./editor"
 import { Converter } from "anki-md-html"
 import { ancestor } from "./utils"
-import { customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip, PasteKeyBindings } from "./custom_paste"
+import { customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip } from "./custom_paste"
 import { CustomInputClass } from "./custom_input"
 import { parse_config } from "./config"
 import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_DEFAULT, FIELD_INPUT,
@@ -62,7 +62,7 @@ function create_editor(parent: HTMLDivElement, onchange: (html: string) => void)
     parent: parent,
     extensions: [
       EditorView.domEventHandlers(domEventHandlers), // Handlers for scrolling and hide toolbar
-      customPaste(_converter, _config[EDITOR][PASTE])  
+      customPaste(_converter)
     ],
     keymap: _config[EDITOR][KEYMAP],
     oninput: (md: string) => onchange(_converter.markdown_to_html(md)),
@@ -109,6 +109,10 @@ function onadd() {
 // Setup event listeners and configuration - create CM instances only on demand
 function init(cfg: Configuration) {
   _config = parse_config(cfg)
+  console.log('parsed config:')
+  for (const e of _config[EDITOR][KEYMAP]) {
+    console.log(JSON.stringify(e) + ', ' + e.run.name)
+  }
   _converter = new Converter(_config[CONVERTER])
   let tip = "Toggle Markdown input"
   if (_config[FIELD_INPUT]?.[SC_TOGGLE]) tip += ` (${_config[FIELD_INPUT][SC_TOGGLE]})`

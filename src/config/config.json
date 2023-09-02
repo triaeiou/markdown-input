@@ -66,7 +66,7 @@
 				"scope": "editor search-panel",
 				"preventDefault": true
 			},{
-				"key": "Ctrl-Alt-c",
+				"key": "Mod-Alt-c",
 				"run": "clozeCurrent",
 				"preventDefault": true
 			},{
@@ -74,12 +74,16 @@
 				"run": "clozeNext",
 				"preventDefault": true
 			},{
-				"key": "Ctrl-Shift-Alt-c",
+				"key": "Mod-Shift-Alt-c",
 				"run": "unclozeSelections",
 				"preventDefault": true
 			},{
 				"key": "Mod-Shift-j",
 				"run": "joinLines",
+				"preventDefault": true
+			},{
+				"key": "Mod+v",
+				"run": "pasteMarkdownAppend",
 				"preventDefault": true
 			}
 		],
@@ -87,15 +91,7 @@
 			"caseSensitive": false,
 			"regexp": true,
 			"wholeWord": false
-		},
-		"paste": {
-			"pasteMarkdown": "Ctrl-v",
-			"pasteMarkdownStrip": "Ctrl-Shift-u",
-			"pasteMarkdownAppend": "Ctrl-Shift-Alt-v",
-			"pasteText": "Ctrl-Shift-v",
-			"pasteTextStrip": "Ctrl-Shift-Alt-u",
-			"pasteTextAppend": "Ctrl-Shift-Alt-g"
-		}			
+		}
 	},
 	"General": {
 		"Browser sort field": true
