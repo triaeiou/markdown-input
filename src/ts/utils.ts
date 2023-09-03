@@ -5,4 +5,66 @@ function ancestor(descendant: HTMLElement, selector: string) {
     return descendant
 }
 
-export {ancestor}
+/** Grow "selection" to first match */
+function grow(begin: RegExp, end: RegExp, str: string, head: number, tail?: number): {head: {outer: number, inner: number}, tail: {outer: number, inner: number}}|undefined {
+    let hout = -1, hin = -1, hopen = 0, m: RegExpMatchArray
+    if (tail === undefined) tail = head
+    const re = new RegExp(`(${begin.source})|(${end.source})`, 'g')
+    while (m = re.exec(str)) {
+        const eindex = m.index + m[0].length
+        if (m[1]) {
+            if (eindex <= tail) {
+                hout = m.index
+                hin = eindex
+                hopen = 1
+            }
+            else if (!hopen) break
+            else hopen++
+        } else {
+            if (!hopen) {
+                if (m.index > tail) break
+                continue
+            }
+            else if (hopen === 1) {
+                return {
+                    head: {outer: hout, inner: hin},
+                    tail: {outer: eindex, inner: m.index}
+                }
+            }
+            hopen--
+        }
+    }
+
+    return undefined
+}
+
+/** Shrink "selection" to first match */
+function shrink(begin: RegExp, end: RegExp, str: string, head?: number, tail?: number): {head: {outer: number, inner: number}, tail: {outer: number, inner: number}}|undefined {
+    if (head === undefined) head = 0
+    if (tail === undefined) tail = str.length
+    const stack: [number, number][] = []
+    const pairs: {head: {outer: number, inner: number}, tail: {outer: number, inner: number}}[] = []    
+    const re = new RegExp(`(${begin.source})|(${end.source})`, 'g')
+    let m: RegExpMatchArray
+    while(m = re.exec(str)) {
+        const eindex = m.index + m[0].length
+        if (m[1]) {
+            if (eindex > tail) break
+            else if (m.index < head) continue
+            stack.push([m.index, eindex])
+        } else {
+            if (eindex > tail) break
+            else if (!stack.length) continue
+            const h = stack.pop() as [number, number]
+            pairs.push({
+                head: {outer: h[0], inner: h[1]},
+                tail: {outer: eindex, inner: m.index}
+            })
+        }
+    }
+
+    return pairs.pop()
+}
+
+
+export {ancestor, shrink, grow}

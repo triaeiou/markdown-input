@@ -59,31 +59,22 @@ function _paste(view: EditorView, format: 'md'|'txt', transform?: 'strip'|'appen
     // Move cursor to correct position
     view.dispatch({selection: {anchor: view.state.selection.main.from + pos}})
   }
-  console.log("entering _paste")
 
   bridgeCommand('clipboard-contents', (res) => {
     // Unclear why aqt bridge returns JSON string and QWebChannel returns object
     const contents = objectify(res) as Contents
-    console.log("got clipboard contents")
 
     if (contents.html && format === 'md') {
-      console.log("getting clipboard html")
       bridgeCommand('clipboard-html', (html: string) => {
-        console.log("got clipboard html: " + html)
         let md = _paste['converter'].html_to_markdown(html)
         if (md) {
-          console.log("converted clipboard html to md: " + md)
           md = tr(transform, md)
-          console.log("transformed md:" + md)
           write_to_dom(md, md.length)
         }
       })
     } else if (contents.text) {
-      console.log("getting clipboard text")
       bridgeCommand('clipboard-text', (txt: string) => {
-        console.log("got clipboard text: " + txt)
         txt = tr(transform, txt)
-        console.log("transformed text:" + txt)
         write_to_dom(txt, txt.length)
       })
     } else if (contents.image && format === 'md') {

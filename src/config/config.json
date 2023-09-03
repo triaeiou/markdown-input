@@ -66,7 +66,7 @@
 				"scope": "editor search-panel",
 				"preventDefault": true
 			},{
-				"key": "Mod-Alt-c",
+				"key": "Alt-Shift-c",
 				"run": "clozeCurrent",
 				"preventDefault": true
 			},{
@@ -74,7 +74,7 @@
 				"run": "clozeNext",
 				"preventDefault": true
 			},{
-				"key": "Mod-Shift-Alt-c",
+				"key": "Mod-Shift-u",
 				"run": "unclozeSelections",
 				"preventDefault": true
 			},{
@@ -83,7 +83,19 @@
 				"preventDefault": true
 			},{
 				"key": "Mod-v",
+				"run": "pasteMarkdown",
+				"preventDefault": true
+			},{
+				"key": "Mod-shift-v",
+				"run": "pasteText",
+				"preventDefault": true
+			},{
+				"key": "Alt-shift-v",
 				"run": "pasteMarkdownAppend",
+				"preventDefault": true
+			},{
+				"key": "Alt-shift-u",
+				"run": "pasteMarkdownStrip",
 				"preventDefault": true
 			}
 		],

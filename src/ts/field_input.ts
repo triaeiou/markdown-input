@@ -109,7 +109,6 @@ function onadd() {
 // Setup event listeners and configuration - create CM instances only on demand
 function init(cfg: Configuration) {
   _config = parse_config(cfg)
-  //_config = cfg
   _converter = new Converter(_config[CONVERTER])
   let tip = "Toggle Markdown input"
   if (_config[FIELD_INPUT]?.[SC_TOGGLE]) tip += ` (${_config[FIELD_INPUT][SC_TOGGLE]})`

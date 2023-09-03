@@ -3,6 +3,7 @@
  */
 import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@codemirror/view"
 import { RangeSetBuilder } from "@codemirror/state"
+import { grow, shrink } from "../utils"
 
 const CLOZE = Decoration.mark({
   attributes: {class: "cm-cloze"}
@@ -118,7 +119,36 @@ function clozeCurrent(view: EditorView) {
 
 /** Remove clozes in selections */
 function unclozeSelections(view: EditorView) {
-  console.log("uncloze not yet implemented...")
+  const selection = view.state.selection
+  const trs = []
+  const rngs = []
+  const txt = view.state.doc.toString()
+  if (selection.ranges.length === 1 && selection.ranges[0].empty)
+    rngs.push(grow(/\{\{c\d+::/, /\}\}/, txt, selection.ranges[0].head))
+  else
+    selection.ranges.forEach((rng, n) => {
+      const r = shrink(/\{\{c\d+::/, /\}\}/, txt, rng.from, rng.to)
+      if (r) rngs.push(r)
+    })
+  
+  rngs.forEach((r) => {
+    trs.push({
+      changes: {
+        from: r.head.outer, to: r.tail.outer,
+        insert: txt.slice(r.head.inner, r.tail.inner).replace(/\{\{c\d+::|\}\}/g, '')
+      }
+    })
+  })
+
+  view.dispatch(...trs)
+
+  const mrng = view.state.selection.main
+  view.dispatch({
+    selection: {
+      anchor: mrng.from
+    }
+  })
+  return true
 }
 
 export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections}

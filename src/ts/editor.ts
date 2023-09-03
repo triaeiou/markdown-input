@@ -1,4 +1,4 @@
-import {EditorView, keymap, highlightSpecialChars, drawSelection, rectangularSelection, crosshairCursor, highlightActiveLine, dropCursor, KeyBinding, ViewPlugin} from "@codemirror/view"
+import {EditorView, keymap, rectangularSelection, crosshairCursor, highlightActiveLine, dropCursor, KeyBinding, ViewPlugin} from "@codemirror/view"
 import {EditorState, Transaction, EditorSelection, SelectionRange, Prec, Extension} from "@codemirror/state"
 import {indentOnInput, bracketMatching, indentUnit, syntaxHighlighting, LanguageSupport} from "@codemirror/language"
 import {languages} from "@codemirror/language-data"
@@ -12,8 +12,6 @@ import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
 
 import {Underline} from "./CodeMirror.extensions/markdown_extensions"
 import {clozeDecorator} from "./CodeMirror.extensions/cloze"
-
-import { pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip } from "./custom_paste"
 
 /** CodeMirror instance configuration */
 
@@ -42,19 +40,11 @@ const ping = (view: EditorView) => {
   return true
 }
 
-import { parse_km } from "./config"
 class Editor {
   cm: EditorView
   extensions: (Extension|LanguageSupport|ViewPlugin<any>)[]
 
   constructor(cfg: Configuration) {
-    //parse_km(cfg.keymap)
-
-    console.log("=== KEYMAP ===")
-    for (const k of cfg.keymap) {
-      console.log("  " + JSON.stringify(k) + ": " + k.run.name + " (" + k.run.toString() + ")")
-    }
-
     this.extensions = [
       history(),
       dropCursor(),
@@ -73,42 +63,7 @@ class Editor {
       indentUnit.of("    "),
       Prec.highest(
         keymap.of([
-          /*{
-            key: "Mod-v",
-            run: pasteMarkdown,
-            preventDefault: true        
-          },
-          {
-            key: "Mod-Shift-v",
-            run: pasteMarkdownAppend,
-            preventDefault: true        
-          },
-          {
-            key: "Mod-Alt-v",
-            run: pasteMarkdownAppend,
-            preventDefault: true        
-          },
-          {
-            key: "Mod-Alt-v",
-            run: ping,
-            preventDefault: true        
-          },*/
-          {
-            key: "Mod-Shift-p",
-            run: pasteMarkdownAppend,
-            preventDefault: true        
-          },
           ...cfg.keymap,
-          ...closeBracketsKeymap,
-          ...markdownKeymap,
-          ...defaultKeymap,
-          indentWithTab,
-          ...historyKeymap,
-          ...completionKeymap
-        ])
-      ),
-      Prec.high(
-        keymap.of([
           ...closeBracketsKeymap,
           ...markdownKeymap,
           ...defaultKeymap,

@@ -55,6 +55,32 @@ def bridge(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool,
         return (True, res)
     return handled
 
+"""
+Currently not implemented
+###########################################################################
+def ctx_menu(webview: aqt.webview.AnkiWebView, menu: QMenu):
+    def get_sc(name: str):
+        for sc in _config[EDITOR][KEYMAP]:
+            if sc.get('run', None) == name:
+                if key := sc.get('key', None):
+                    return QKeySequence(
+                        re.sub(
+                            'mod',
+                            'Ctrl',
+                            key.replace('-', '+'),
+                            flags=re.IGNORECASE
+                        )
+                    )
+                return None
+        return None
+
+    sc = get_sc('pasteMarkdown')
+    if sc:
+        sc = f' ({sc.toString()})'
+    action = menu.addAction(f'Paste Markdown{sc}')
+
+ """
+
 ###########################################################################
 def init(cfg):
     """Set configuration and hooks"""

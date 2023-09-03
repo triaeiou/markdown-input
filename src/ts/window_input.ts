@@ -3,24 +3,23 @@ import type { EditorView } from "./editor"
 import { Converter } from "anki-md-html"
 import { customPaste } from "./custom_paste"
 import { Configuration, CONVERTER, WINDOW_INPUT, WINDOW_MODE, EDITOR, KEYMAP } from "./constants"
-import { parse_keymap } from "./config"
+import { parse_config } from "./config"
 
 class WindowEditor {
   editor: Editor
   converter: Converter
 
   constructor(parent: HTMLElement, cfg: Configuration) {
-    Object.assign(this, cfg)
+    Object.assign(this, parse_config(cfg))
     this.converter = new Converter(this[CONVERTER])
     const exts = [
       customPaste(this.converter)
     ]
-    const km = parse_keymap(this[EDITOR][KEYMAP])
 
     this.editor = new Editor({
       parent: parent,
       extensions: exts,
-      keymap: km,
+      keymap: this[EDITOR][KEYMAP],
       ...this[EDITOR]
     })
   }
