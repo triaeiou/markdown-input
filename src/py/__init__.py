@@ -16,12 +16,28 @@ update_cfg = False
 
 if strvercmp(CVER, '0.0.0') > 0:
     if strvercmp(CVER, '2.2.4') < 0:
-        msgs.append('Option for default paste style (convert HTML to Markdown or text) have been added. When set to `markdown` (default) pasted HTML will be convertet to Markdown, otherwise only the text will be inserted.')
-        if config[EDITOR].get(PASTE, None) is None:
-            config[EDITOR][PASTE] = {
-                DEFAULT: "markdown"
-            }
-            update_cfg = True
+        msgs.append('''Options for paste (convert HTML to Markdown or text, amend or strip clozes) have been added. See readme for details and change your configuration as needed, e.g. under `CodeMirror/keymap` add entries such as:<br><code>{
+    "key": "Mod-Shift-u",
+    "run": "unclozeSelections",
+    "preventDefault": true
+},{
+    "key": "Mod-v",
+    "run": "pasteMarkdown",
+    "preventDefault": true
+},{
+    "key": "Mod-shift-v",
+    "run": "pasteText",
+    "preventDefault": true
+},{
+    "key": "Alt-shift-v",
+    "run": "pasteMarkdownAppend",
+    "preventDefault": true
+},{
+    "key": "Alt-shift-u",
+    "run": "pasteMarkdownStrip",
+    "preventDefault": true
+}
+</code>''')
 
     if strvercmp(CVER, '2.2.3') < 0:
         msgs.append('Option "Browser sort field" has been added. When enabled (default `true`) it will use first `&lt;h1&gt;` tag in note (if it exists) in the "Sort field" column in the browser table (default Anki is unaware of heading tags).')
@@ -62,7 +78,7 @@ if strvercmp(CVER, '0.0.0') > 0:
         update_cfg = True
 
     if strvercmp(CVER, '2.0.0') < 0:
-        msgs.append('The editor DOM and internal functioning which <code>Markdown input</code> depends on changed in Anki version 2.1.56. The current version of <code>Markdown input</code> ships with both 2.1.56+ compatible code as well as the last <a href="https://github.com/TRIAEIOU/Markdown-input/releases/tag/v1.2.5">release</a> targeted at 2.1.55. Going forward no updates/fixes will be made to the legacy code, any development/bug fixes will be in the 2.1.56+ code.')
+        msgs.append('The editor DOM and internal functioning which <code>Markdown input</code> depends on changed in Anki version 2.1.56. The current version of <code>Markdown input</code> only ships with 2.1.56+ compatible code. See addon page for details regarding 2.1.55 releases.')
         msgs.append('Due to the changes mentioned above you will likely need to update the CSS for the field input (<code>Field input/CSS</code> in the configuration).')
 
 if update_cfg:

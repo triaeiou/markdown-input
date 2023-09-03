@@ -121,33 +121,37 @@ function clozeCurrent(view: EditorView) {
 function unclozeSelections(view: EditorView) {
   const selection = view.state.selection
   const trs = []
-  const rngs = []
   const txt = view.state.doc.toString()
-  if (selection.ranges.length === 1 && selection.ranges[0].empty)
-    rngs.push(grow(/\{\{c\d+::/, /\}\}/, txt, selection.ranges[0].head))
-  else
-    selection.ranges.forEach((rng, n) => {
-      const r = shrink(/\{\{c\d+::/, /\}\}/, txt, rng.from, rng.to)
-      if (r) rngs.push(r)
-    })
-  
-  rngs.forEach((r) => {
-    trs.push({
-      changes: {
-        from: r.head.outer, to: r.tail.outer,
-        insert: txt.slice(r.head.inner, r.tail.inner).replace(/\{\{c\d+::|\}\}/g, '')
+  let pos = -1
+  if (selection.ranges.length === 1 && selection.ranges[0].empty) {
+    for (const r of grow(/\{\{c\d+::/, /\}\}/, txt, selection.ranges[0].head)) {
+      trs.push({
+        changes: {from: r.head.outer, to: r.head.inner, insert: ''}
+      },{
+        changes: {from: r.tail.inner, to: r.tail.outer, insert: ''}
+      })
+    }
+  } else {
+    for (const rng of selection.ranges) {
+      for (const r of shrink(/\{\{c\d+::/, /\}\}/, txt, rng.from, rng.to)) {
+        trs.push({
+            changes: {from: r.head.outer, to: r.head.inner, insert: ''}
+          },{
+            changes: {from: r.tail.inner, to: r.tail.outer, insert: ''}
+        })
+        if (pos === -1 && rng === view.state.selection.main) pos = r.head.outer
       }
-    })
-  })
-
+    }
+  }
   view.dispatch(...trs)
 
-  const mrng = view.state.selection.main
-  view.dispatch({
-    selection: {
-      anchor: mrng.from
-    }
-  })
+  if (pos > -1)
+    view.dispatch({
+      selection: {
+        anchor: pos
+      }
+    })
+
   return true
 }
 

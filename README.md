@@ -70,9 +70,11 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
   - Cloze without increment: `Ctrl+Shift+Z` - For some reason I am unable to get `Ctrl+Alt+Shift+C` to work (the default Anki keyboard shortcut)
   - Cloze with increment: `Ctrl+Shift+c` (with multiple selections this will cloze each incrementally)
   - If you feel the cloze deletion tags end up in the wrong place please make sure you understand how Markdown is converted to HTML (notably line breaks and empty lines).
-- Allows image pasting in the same way the "rich text input" does.
+- Extended pasting functionality
+  - Paste HTML (also attempts to clean up HTML received from `Microsoft Word`) as Markdown or pure text, paste images the same way the "rich text input" does, paste so that any clozes in the clipboard are amended to follow after existing clozes or strip the completely.
+- Remove clozes in selection or the "one the cursor currently is in".
 - Customize the editor styling by copying `cm.css` into `user_files` subdirectory and customize. Consider using `--var(xyz)` to use the Anki colors from the current theme (i.e. follows light/dark mode).
-- Customize Markdown input editor shortcuts (i.e. *inside* the field/window, not the core Anki editor) in `config.json`, see `config.json` and [CodeMirror documentation](https://codemirror.net/docs/ref/#view.KeyBinding) for further information. Available functions to map are all in [@codemirror/commands](https://github.com/codemirror/commands/blob/main/src/commands.ts), [@codemirror/search](https://github.com/codemirror/search/blob/main/src/search.ts) and custom commands `clozeNext`, `clozeCurrent`, `joinLines`.
+- Customize Markdown input editor shortcuts (i.e. *inside* the field/window, not the core Anki editor) in `config.json`, see `config.json` and [CodeMirror documentation](https://codemirror.net/docs/ref/#view.KeyBinding) for further information. Available functions to map are all in [@codemirror/commands](https://github.com/codemirror/commands/blob/main/src/commands.ts), [@codemirror/search](https://github.com/codemirror/search/blob/main/src/search.ts) and custom commands `clozeNext`, `clozeCurrent`, `joinLines`, `unclozeSelections`, `pasteMarkdown`, `pasteMarkdownAppend`, `pasteMarkdownStrip`, `pasteText`, `pasteTextAppend` and `pasteTextStrip`.
 - Configurable search/replace default options (`caseSensitive`, `regexp`, `wholeWord`).
 
 ### Field input mode
@@ -94,9 +96,13 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - "Window input mode" can be configured under `Window input`.
 - HTML ↔ Markdown conversion configurable under `Converter`. See [mdastToMarkdown](https://github.com/syntax-tree/mdast-util-to-markdown#tomarkdowntree-options) for `Markdown format` options.
 - Editor configurable under `CodeMirror`. See [CodeMirror documentation](https://codemirror.net/docs/) how to configure.
-- Paste can convert HTML to Markdown, default action for paste (i.e. `Ctrl+v`) configured in `CodeMirror/past/default` (`markdown` or `text`); the "other" paste action is available from `Ctrl+Shift+V`.
+- Paste can be congigured in multiple ways (`CodeMirror/keymap`) - note the format of the shortcuts are `CodeMirror`-style (modifiers and keys separated by `-` rather than `+`):
+  - `pasteMarkdown`: Convert HTML in clipboard to Markdown (default for `Ctrl+V`), if there is no HTML in the clipboard it will be pasted as plain text.
+  - `pasteMarkdownAppend`: As `pasteMarkdown` but any clozes in the clipboard are amended so that their numbering is appended to any existing numbering (so it will reorganize cloze numbering to start from `1` if there are no clozes in the text before pasting).
+  - `pasteMarkdownStrip`: As `pasteMarkdown` but any clozes in the clipboard are removed (but their contents are retained).
+  - `pasteText`/`pasteTextAppend`/`pasteTextStrip`: As corresponding `pasteMarkdown` but pasted as plain text.
 - Default Anki behaviour is to use the entire sort field text in the Browser table, `Browser sort field` option (default `true`) instead uses content of first level 1 heading (if existing).
-- Note that Anki shortcuts grab key sequences before they reach the CodeMirror editor, use [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) or other addon to change the Anki shortcuts as needed. At the time of writing [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) hooks into the Qt/Python for the cloze shortcuts. This means they never reach CodeMirror so unmap (`<nop`>) them in [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) (the new Anki editor grabs the shortcuts on the JavaScript side).
+- Note that Anki shortcuts grab key sequences before they reach the CodeMirror editor, use [Override shortcuts](https://ankiweb.net/shared/info/604635542), [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) or other addon to change the Anki shortcuts as needed. At the time of writing [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) hooks into the Qt/Python for the cloze shortcuts. This means they never reach CodeMirror so unmap (`<nop>`) them in [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) (the new Anki editor grabs the shortcuts on the JavaScript side).
 - To customize the look of the finished HTML apply custom [CSS](https://www.w3schools.com/Css/) styling (for instance of `<h1/2/3/etc>`, `<table>` `<ul/ol>` etc.) to the note template.
 - To customize the look and feel of the editor, make a copy of `cm.css` (styling of CodeMirror and syntax highlighting) into a `user_files` subdirectory in the addon directory and modify that file (it will be given precedence and not be overwritten on addon update).
 
@@ -104,6 +110,7 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 
 To achieve a note editing friendly interface consider using:
 
+- [Override shortcuts](https://ankiweb.net/shared/info/604635542) or [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) to unmap relevant shortcuts you want to use in CodeMirror.
 - [CSS Injector - Change default editor styles](https://ankiweb.net/shared/info/181103283) to modify the editor interface for smaller margins, for instance something like this will give a slicker, VS Code inspired, editor interface:
 
   ```css
@@ -187,4 +194,4 @@ Functionality split into different classes to facilitate reuse:
 - 2023-04-26: Improve logic to fix anoying eating of trailing spaces, change search/replace dialog placement so that it is visible without having to scroll.
 - 2023-05-04: Add `rich text/markdown` field default configuration option, add list continuation thanks to [David C.](https://github.com/d-k-bo).
 - 2023-06-01: Table bug fix (tables now non-optional), rename config option from `Table style` to `Tables`, add code block syntax highlighting, add `Browser sort field` option, add styling of cloze tags in the Markdown editor.
-- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown.
+- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amedning or stripping clozes, shortcuts to "uncloze".
