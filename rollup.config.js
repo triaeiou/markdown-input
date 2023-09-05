@@ -24,10 +24,10 @@ export default [
     input: "src/ts/field_input.ts",
     plugins: plugins,
     output: output
-  }/* ,
+  } ,
   {
     input: "src/ts/window_input.ts",
     plugins: plugins,
     output: output
-  } */
+  }
 ]

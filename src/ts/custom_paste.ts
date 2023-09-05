@@ -99,13 +99,10 @@ const pasteText = (view: EditorView) => {return _paste(view, 'txt')}
 const pasteTextStrip = (view: EditorView) => {return _paste(view, 'txt', 'strip')}
 const pasteTextAppend = (view: EditorView) => {return _paste(view, 'txt', 'append')}
 
-/* 
-function pasteMarkdown(view: EditorView) {return _paste(view, 'md')}
-function pasteMarkdownStrip(view: EditorView) {return _paste(view, 'md', 'strip')}
-function pasteMarkdownAppend(view: EditorView) {return _paste(view, 'md', 'append')}
-function pasteText(view: EditorView) {return _paste(view, 'txt')}
-function pasteTextStrip(view: EditorView) {return _paste(view, 'txt', 'strip')}
-function pasteTextAppend(view: EditorView) {return _paste(view, 'txt', 'append')}
-*/
+/**
+ * TODO
+ * Add raw
+ * Add text clean to detect lists and possibly tables?
+ */
 
 export {customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip}

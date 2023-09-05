@@ -63,10 +63,11 @@
 			},{
 				"key": "Escape",
 				"run": "closeSearchPanel",
-				"scope": "editor search-panel",
-				"preventDefault": true
+				"scope": "editor, editor search-panel",
+				"preventDefault": true,
+				"stopPropagation": true
 			},{
-				"key": "Alt-Shift-c",
+				"key": "Mod-Alt-C",
 				"run": "clozeCurrent",
 				"preventDefault": true
 			},{
@@ -78,6 +79,10 @@
 				"run": "unclozeSelections",
 				"preventDefault": true
 			},{
+				"key": "Mod-Shift-s",
+				"run": "sortClozes",
+				"preventDefault": true
+			},{
 				"key": "Mod-Shift-j",
 				"run": "joinLines",
 				"preventDefault": true
@@ -86,15 +91,15 @@
 				"run": "pasteMarkdown",
 				"preventDefault": true
 			},{
-				"key": "Mod-shift-v",
+				"key": "Mod-Shift-v",
 				"run": "pasteText",
 				"preventDefault": true
 			},{
-				"key": "Alt-shift-v",
+				"key": "Alt-Shift-v",
 				"run": "pasteMarkdownAppend",
 				"preventDefault": true
 			},{
-				"key": "Alt-shift-u",
+				"key": "Alt-Shift-u",
 				"run": "pasteMarkdownStrip",
 				"preventDefault": true
 			}

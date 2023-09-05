@@ -13,6 +13,7 @@ function parse_config(cfg: Configuration): Configuration {
   }
   
   for (const sc of cfg[EDITOR][KEYMAP]) {
+    console.log('sc: ' + sc.key + '→' + sc.run)
     if('shift' in sc && typeof(sc.shift) !== 'function') sc.shift = parse_config['functions'][sc.shift]
     if('run' in sc && typeof(sc.run) !== 'function') sc.run = parse_config['functions'][sc.run]
   }

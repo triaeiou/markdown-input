@@ -67,8 +67,8 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - Multiple drawable selections.
 - Search and replace, `Ctrl+F`, note: the Anki editor eats `Ctrl+F`, set to other shortcut in config or remap the Anki editor shortcuts with [Customize Keyboard Shortcuts](https://ankiweb.net/shared/info/24411424) or similar.
 - Insert cloze deletions
-  - Cloze without increment: `Ctrl+Shift+Z` - For some reason I am unable to get `Ctrl+Alt+Shift+C` to work (the default Anki keyboard shortcut)
-  - Cloze with increment: `Ctrl+Shift+c` (with multiple selections this will cloze each incrementally)
+  - Cloze without increment: `Ctrl+Alt+C`/`Ctrl+Alt+Shift+C` - At the time of writing `CodeMirror` key detection logic does not allow differentiation between `Ctrl+Alt+Shift-C` and `Ctrl+Alt-C` in Qt, at least on Windows where `Ctrl-Alt` results in a upper case char being sent to `CodeMirror`.
+  - Cloze with increment: `Ctrl+Shift+C` (with multiple selections this will cloze each incrementally)
   - If you feel the cloze deletion tags end up in the wrong place please make sure you understand how Markdown is converted to HTML (notably line breaks and empty lines).
 - Extended pasting functionality
   - Paste HTML (also attempts to clean up HTML received from `Microsoft Word`) as Markdown or pure text, paste images the same way the "rich text input" does, paste so that any clozes in the clipboard are amended to follow after existing clozes or strip the completely.
@@ -96,7 +96,7 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - "Window input mode" can be configured under `Window input`.
 - HTML ↔ Markdown conversion configurable under `Converter`. See [mdastToMarkdown](https://github.com/syntax-tree/mdast-util-to-markdown#tomarkdowntree-options) for `Markdown format` options.
 - Editor configurable under `CodeMirror`. See [CodeMirror documentation](https://codemirror.net/docs/) how to configure.
-- Paste can be congigured in multiple ways (`CodeMirror/keymap`) - note the format of the shortcuts are `CodeMirror`-style (modifiers and keys separated by `-` rather than `+`):
+- Paste can be congigured in multiple ways (`CodeMirror/keymap`) - note the format of the shortcuts are `CodeMirror`-style (modifiers and keys separated by `-` rather than `+`, also note that `Ctrl-Alt` results in the char being interpreted as upper case, amend the sequence appropriately (`Ctrl-Alt-x` never fires, only `Ctrl-Alt-X`)):
   - `pasteMarkdown`: Convert HTML in clipboard to Markdown (default for `Ctrl+V`), if there is no HTML in the clipboard it will be pasted as plain text.
   - `pasteMarkdownAppend`: As `pasteMarkdown` but any clozes in the clipboard are amended so that their numbering is appended to any existing numbering (so it will reorganize cloze numbering to start from `1` if there are no clozes in the text before pasting).
   - `pasteMarkdownStrip`: As `pasteMarkdown` but any clozes in the clipboard are removed (but their contents are retained).
@@ -194,4 +194,4 @@ Functionality split into different classes to facilitate reuse:
 - 2023-04-26: Improve logic to fix anoying eating of trailing spaces, change search/replace dialog placement so that it is visible without having to scroll.
 - 2023-05-04: Add `rich text/markdown` field default configuration option, add list continuation thanks to [David C.](https://github.com/d-k-bo).
 - 2023-06-01: Table bug fix (tables now non-optional), rename config option from `Table style` to `Tables`, add code block syntax highlighting, add `Browser sort field` option, add styling of cloze tags in the Markdown editor.
-- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amedning or stripping clozes, shortcuts to "uncloze".
+- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "uncloze" functionality added.

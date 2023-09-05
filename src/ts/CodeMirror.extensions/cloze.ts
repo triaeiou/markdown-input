@@ -3,6 +3,7 @@
  */
 import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@codemirror/view"
 import { RangeSetBuilder } from "@codemirror/state"
+import { Dialog } from "./dialog"
 import { grow, shrink } from "../utils"
 
 const CLOZE = Decoration.mark({
@@ -39,8 +40,11 @@ const clozeDecorator = ViewPlugin.fromClass(class {
   decorations: v => v.decorations
 })
 
+/** Compiled RE for finding cloze ordinals */
 const CLOZE_ORD_RE = new RegExp(String.raw`{{c(\d+)::`, 'g')
-function currentOrdinal(view: EditorView) {
+
+/** Return highest ordinal in doc */
+function currentOrdinal(view: EditorView): number {
   let itr = view.state.doc.iter()
   let ord = 0
 
@@ -58,12 +62,62 @@ function currentOrdinal(view: EditorView) {
   return ord
 }
 
+/** Sort document ordinals in ascending order */
+function sortClozes(view: EditorView): boolean {
+
+  function sort(evt: Event) {
+    let itr = view.state.doc.iter()
+    let i = 0
+    const ords = {}
+  
+    while (!itr.done) {
+      if (!itr.lineBreak) {
+        let match: RegExpExecArray
+        while ((match = CLOZE_ORD_RE.exec(itr.value)) !== null) {
+          const n = parseInt(match[1])
+          if (!ords[n]) ords[n] = ++i
+        }
+      }
+      itr.next()
+    }
+
+    itr = view.state.doc.iter()
+    const trs = []
+    while (!itr.done) {
+      if (!itr.lineBreak) {
+        let match: RegExpExecArray
+        while ((match = CLOZE_ORD_RE.exec(itr.value)) !== null) {
+          trs.push({
+            changes: {
+              from: match.index, to: match[0].length,
+              insert: `{{c${ords[parseInt(match[1])]}::`
+            }
+          })
+        }
+      }
+      itr.next()
+    }
+
+    return true
+  }
+  console.log('sorting clozes...')
+  const dlg = new Dialog(
+    view,
+    '<div><b>SORT CLOZES?</b><br>Are you sure you want to sort the clozes? Note that this will mess up the scheduling as that will be dependent on the old cloze ordinals.<br><div id="ok">Sort</div>&nbsp;<div>Cancel</div></div>',
+    [{id: 'ok', onclick: sort, default: true}, {id: 'cancel'}]
+  )
+  dlg.show()
+
+  return true
+}
+
+
 /**
  * Wrap selection(s) in cloze tags
  * @param inc increase ordinal or not
  * @returns
  */
-function cloze_selections(view: EditorView, inc: boolean) {
+function cloze_selections(view: EditorView, inc: boolean): boolean {
   const selection = view.state.selection
   let i = currentOrdinal(view)
   const trs = []
@@ -109,22 +163,23 @@ function cloze_selections(view: EditorView, inc: boolean) {
   return true
 }
 /** Encloze selection(s) incrementing cloze ordinal */
-function clozeNext(view: EditorView) {
+function clozeNext(view: EditorView): boolean {
   return cloze_selections(view, true)
 }
 /** Encloze selection(s) without incrementing cloze ordinal */
-function clozeCurrent(view: EditorView) {
+function clozeCurrent(view: EditorView): boolean {
   return cloze_selections(view, false)
 }
 
 /** Remove clozes in selections */
-function unclozeSelections(view: EditorView) {
+function unclozeSelections(view: EditorView): boolean {
   const selection = view.state.selection
   const trs = []
   const txt = view.state.doc.toString()
   let pos = -1
   if (selection.ranges.length === 1 && selection.ranges[0].empty) {
-    for (const r of grow(/\{\{c\d+::/, /\}\}/, txt, selection.ranges[0].head)) {
+    const r = grow(/\{\{c\d+::/, /\}\}/, txt, selection.ranges[0].head).pop()
+    if (r) {
       trs.push({
         changes: {from: r.head.outer, to: r.head.inner, insert: ''}
       },{
@@ -155,4 +210,4 @@ function unclozeSelections(view: EditorView) {
   return true
 }
 
-export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections}
+export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections, sortClozes}
