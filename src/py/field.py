@@ -2,8 +2,8 @@ import json, tempfile
 from aqt import mw, gui_hooks, QKeySequence
 from aqt.utils import *
 from .constants import *
-from .version import strvercmp
-from .utils import bridge_handler, get_path
+from .utils import get_path
+from .bridge import handler
 
 if tmp := re.match(r"^\s*((\d+\.)+\d+)", version_with_build()):
     ANKI_VER = tmp.group(1)
@@ -33,7 +33,7 @@ def add_srcs(web_content: aqt.webview.WebContent, context: object):
     addon = mw.addonManager.addonFromModule(__name__)
     # Defer script to allow bridgeCommand to be defined
     web_content.head += f"""
-        <script src="/_addons/{addon}/field_input.js"></script>
+        <script src="/_addons/{addon}/field.js"></script>
         <link rel=stylesheet href="/_addons/{addon}/mdi.css">
         <link rel=stylesheet href="/_addons/{addon}/{get_path('cm.css')}">
     """
@@ -51,7 +51,7 @@ def bridge(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool,
     Bridge to handle pasting by making clipboard content available to JS side.
     If the clipboard contains an image it is inserted in the media collection.
     """
-    if res := bridge_handler(message):
+    if res := handler(message):
         return (True, res)
     return handled
 
@@ -86,19 +86,19 @@ def init(cfg):
     """Set configuration and hooks"""
     def append_shortcuts(shortcuts, ed):
         shortcuts.append(
-            [QKeySequence(cfg[FIELD_INPUT][SC_TOGGLE]),
+            [QKeySequence(cfg[FIELD][SC_TOGGLE]),
             lambda _ed=ed: toggle_field(_ed, 'markdown')]
         )
         shortcuts.append(
-            [QKeySequence(cfg[FIELD_INPUT][SC_RICH]),
+            [QKeySequence(cfg[FIELD][SC_RICH]),
             lambda _ed=ed: toggle_field(_ed, 'rich')]
         )
         shortcuts.append(
-            [QKeySequence(cfg[FIELD_INPUT][SC_NEXT]),
+            [QKeySequence(cfg[FIELD][SC_NEXT]),
            lambda _ed=ed: ed.web.eval('MarkdownInput.cycle_next()')]
         )
         shortcuts.append(
-            [QKeySequence(cfg[FIELD_INPUT][SC_PREV]),
+            [QKeySequence(cfg[FIELD][SC_PREV]),
            lambda _ed=ed: ed.web.eval('MarkdownInput.cycle_prev()')]
         )
 

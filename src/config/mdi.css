@@ -21,6 +21,25 @@ div.markdown-input:not([hidden]) ~ div.rich-text-input {
     left: unset;
 }
 
+.cm-editor .cm-dialog {
+    border: 1px solid var(--border);
+    position: initial;
+    z-index: 101;
+    max-width: 80%;
+}
+.cm-editor .cm-dialog .cm-dialog-content td:first-child {
+    padding-right: 10px;
+}
+.cm-editor .cm-dialog .cm-dialog-buttons {
+    text-align: right;
+}
+ .cm-editor .cm-dialog .cm-dialog-buttons button {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 0px;
+}
+
 /* Only relevant for window input */
 body.mdi-window {
     margin: 0;

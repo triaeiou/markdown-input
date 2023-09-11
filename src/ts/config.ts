@@ -3,22 +3,29 @@ import * as search from "search"
 import * as cloze from "./CodeMirror.extensions/cloze"
 import * as join_lines from "./CodeMirror.extensions/join_lines"
 import * as custom_paste from "./custom_paste"
+import * as help from "./CodeMirror.extensions/help"
 import { Configuration, EDITOR, KEYMAP } from "./constants"
+import { KeyBinding } from "@codemirror/view"
 
-function parse_config(cfg: Configuration): Configuration {
-  if (!parse_config['functions']) {
-    parse_config['functions'] = {}
-    for (const namespace of [commands, search, cloze, join_lines, custom_paste])
-      for (const [k, v] of Object.entries(namespace)) parse_config['functions'][k] = v
+function parse(cfg: Configuration): Configuration {
+  if (!parse['functions']) {
+    parse['functions'] = {}
+    for (const namespace of [commands, search, cloze, join_lines, custom_paste, help])
+      for (const [k, v] of Object.entries(namespace)) parse['functions'][k] = v
   }
   
   for (const sc of cfg[EDITOR][KEYMAP]) {
-    console.log('sc: ' + sc.key + '→' + sc.run)
-    if('shift' in sc && typeof(sc.shift) !== 'function') sc.shift = parse_config['functions'][sc.shift]
-    if('run' in sc && typeof(sc.run) !== 'function') sc.run = parse_config['functions'][sc.run]
+    if('shift' in sc && typeof(sc.shift) !== 'function') sc.shift = parse['functions'][sc.shift]
+    if('run' in sc && typeof(sc.run) !== 'function') sc.run = parse['functions'][sc.run]
   }
+  keybindings['keybindings'] = cfg[EDITOR][KEYMAP]
 
   return cfg
 }
 
-export {parse_config}
+/** Return list of custom key bindings */
+function keybindings(): KeyBinding[] {
+  return keybindings['keybindings']
+}
+
+export {parse, keybindings}

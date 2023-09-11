@@ -1,26 +1,23 @@
 import { Editor } from "./editor"
-import type { EditorView } from "./editor"
 import { Converter } from "anki-md-html"
 import { customPaste } from "./custom_paste"
-import { Configuration, CONVERTER, WINDOW_INPUT, WINDOW_MODE, EDITOR, KEYMAP } from "./constants"
-import { parse_config } from "./config"
+import { Configuration, CONVERTER, WINDOW, WINDOW_MODE, EDITOR, KEYMAP, SEARCH } from "./constants"
+import { parse } from "./config"
 
 class WindowEditor {
   editor: Editor
   converter: Converter
 
   constructor(parent: HTMLElement, cfg: Configuration) {
-    Object.assign(this, parse_config(cfg))
+    Object.assign(this, parse(cfg))
     this.converter = new Converter(this[CONVERTER])
-    const exts = [
-      customPaste(this.converter)
-    ]
-
     this.editor = new Editor({
       parent: parent,
-      extensions: exts,
+      extensions: [
+        customPaste(this.converter)
+      ],
       keymap: this[EDITOR][KEYMAP],
-      ...this[EDITOR]
+      search: this[EDITOR][SEARCH]
     })
   }
 
@@ -30,7 +27,7 @@ class WindowEditor {
    * @param i
    */
   set_html(fields: [[title: string, content: string]], i: number) {
-    if (this[WINDOW_INPUT]?.[WINDOW_MODE] === 'note') {
+    if (this[WINDOW]?.[WINDOW_MODE] === 'note') {
       let html = ''
       for (const [title, content] of fields)
         html += `<!-- ${title} --><br><br>${content}<br><br>`
@@ -45,7 +42,7 @@ class WindowEditor {
   * string for field/selection only mode
   */
   get_html() {
-    if (this[WINDOW_INPUT]?.[WINDOW_MODE] === 'note') {
+    if (this[WINDOW]?.[WINDOW_MODE] === 'note') {
       const fields: [title: string, content: string][] = []
       const md = this.editor.cm.state.doc.toString()
       for (const match of md.matchAll(/(.*?)^[ \t]*<!--[ \t]*(.*?)[ \t]*?-->[ \t]*$/gms)) {

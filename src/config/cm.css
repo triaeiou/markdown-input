@@ -1,5 +1,6 @@
 /* General editor styling */
-.cm-editor .cm-content {
+.cm-editor .cm-content,
+.cm-editor .cm-dialog-content {
 	padding: 5px;
 }
 
@@ -58,14 +59,14 @@
 .cm-editor .cm-panel input {
   background-color: var(--canvas-elevated);
   color: var(--fg);
-	border-color: var(--border);
+  border-color: var(--border);
   font-size: 16px;
-	outline: none;
+  outline: none;
 }
 
 .cm-editor .cm-panel .cm-button {
   background-color: var(--canvas-elevated);
-	border-color: var(--border);
+  border-color: var(--border);
   background-image: none;
 }
 
@@ -78,7 +79,7 @@
   background-color: transparent;
 }
 
-.cm-editor .cm-content {
+.cm-editor .cm-content, .cm-editor .cm-dialog {
   background-color: var(--canvas-elevated);
   color: var(--fg);
 }

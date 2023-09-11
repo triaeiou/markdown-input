@@ -79,8 +79,12 @@
 				"run": "unclozeSelections",
 				"preventDefault": true
 			},{
-				"key": "Mod-Shift-s",
+				"key": "Mod-s",
 				"run": "sortClozes",
+				"preventDefault": true
+			},{
+				"key": "Mod-Shift-S",
+				"run": "syncClozes",
 				"preventDefault": true
 			},{
 				"key": "Mod-Shift-j",
@@ -92,7 +96,7 @@
 				"preventDefault": true
 			},{
 				"key": "Mod-Shift-v",
-				"run": "pasteText",
+				"run": "pasteRaw",
 				"preventDefault": true
 			},{
 				"key": "Alt-Shift-v",

@@ -1,10 +1,15 @@
 /**
  * Cloze related functionality
  */
-import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@codemirror/view"
+import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin, showPanel } from "@codemirror/view"
 import { RangeSetBuilder } from "@codemirror/state"
-import { Dialog } from "./dialog"
+import { dialog } from "./dialog"
 import { grow, shrink } from "../utils"
+import { rx } from 'verbose-regexp'
+import { markdown } from "@codemirror/lang-markdown"
+import { MarkdownParser } from "@lezer/markdown"
+import { forceParsing, syntaxTree } from "@codemirror/language"
+import {SyntaxNodeRef} from "@lezer/common"
 
 const CLOZE = Decoration.mark({
   attributes: {class: "cm-cloze"}
@@ -64,49 +69,47 @@ function currentOrdinal(view: EditorView): number {
 
 /** Sort document ordinals in ascending order */
 function sortClozes(view: EditorView): boolean {
-
+  /** Perform the actual sort */
   function sort(evt: Event) {
-    let itr = view.state.doc.iter()
-    let i = 0
-    const ords = {}
-  
-    while (!itr.done) {
-      if (!itr.lineBreak) {
-        let match: RegExpExecArray
-        while ((match = CLOZE_ORD_RE.exec(itr.value)) !== null) {
-          const n = parseInt(match[1])
-          if (!ords[n]) ords[n] = ++i
-        }
-      }
-      itr.next()
-    }
-
-    itr = view.state.doc.iter()
     const trs = []
-    while (!itr.done) {
-      if (!itr.lineBreak) {
-        let match: RegExpExecArray
-        while ((match = CLOZE_ORD_RE.exec(itr.value)) !== null) {
-          trs.push({
-            changes: {
-              from: match.index, to: match[0].length,
-              insert: `{{c${ords[parseInt(match[1])]}::`
-            }
-          })
+    for (const m of txt.matchAll(/{{c(\d+)::/g)) {
+      trs.push({
+        changes: {
+          from: m.index, to: m.index + m[0].length,
+          insert: `{{c${ords[m[1]]}::`
         }
-      }
-      itr.next()
+      })
     }
-
-    return true
+    view.dispatch(...trs)
   }
-  console.log('sorting clozes...')
-  const dlg = new Dialog(
-    view,
-    '<div><b>SORT CLOZES?</b><br>Are you sure you want to sort the clozes? Note that this will mess up the scheduling as that will be dependent on the old cloze ordinals.<br><div id="ok">Sort</div>&nbsp;<div>Cancel</div></div>',
-    [{id: 'ok', onclick: sort, default: true}, {id: 'cancel'}]
-  )
-  dlg.show()
+
+  // Find all clozes and calculate new ordinals
+  const txt = view.state.doc.toString()
+  let ord = 0
+  const ords = {}
+
+  for (const m of txt.matchAll(/{{c(\d+)::/g)) {
+    const n = parseInt(m[1])
+    if (!ords[n]) ords[n] = ++ord
+  }
+
+  // Ask to sort if clozes are found, calling `sort` on confirmation
+  if (Object.keys(ords).length) {
+    dialog(
+      view,
+      '<b>SORT CLOZES?</b><br>Are you sure you want to sort the clozes? Note that this will mess up the scheduling as that will be dependent on the old cloze ordinals.',
+      [
+        {
+          text: 'Sort',
+          onclick: sort,
+          default: true
+        },
+        {
+          text: 'Cancel'
+        }
+      ]
+    )
+  }
 
   return true
 }
@@ -173,9 +176,9 @@ function clozeCurrent(view: EditorView): boolean {
 
 /** Remove clozes in selections */
 function unclozeSelections(view: EditorView): boolean {
+  const txt = view.state.doc.toString()
   const selection = view.state.selection
   const trs = []
-  const txt = view.state.doc.toString()
   let pos = -1
   if (selection.ranges.length === 1 && selection.ranges[0].empty) {
     const r = grow(/\{\{c\d+::/, /\}\}/, txt, selection.ranges[0].head).pop()
@@ -210,4 +213,132 @@ function unclozeSelections(view: EditorView): boolean {
   return true
 }
 
-export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections, sortClozes}
+function syncClozes(view: EditorView): boolean {
+  function sync() {
+    const trs = []
+    for (const rng of selection.ranges) {
+      for (const m of txt.slice(rng.from, rng.to).matchAll(/\{\{c(\d+)::/g)) {
+        const i = rng.from + m.index + 3
+        trs.push(
+          {
+            changes: {
+              from: i, to: i + m[1].length,
+              insert: ord
+            }
+          }
+        )          
+      }
+    }
+    view.dispatch(...trs)  
+  }
+
+  const txt = view.state.doc.toString()
+  const selection = view.state.selection
+  let ord = ''
+  for (const rng of selection.ranges) {
+    for (const m of txt.slice(rng.from, rng.to).matchAll(/\{\{c(\d+)::/g)) {
+      ord = m[1]
+      dialog(
+        view,
+        `<b>SYNC CLOZES?</b><br>Are you sure you want to sync the clozes to ordinal ${ord}? Note that this will keep the scheduling of cloze ${ord}.`,
+        [
+          {
+            text: 'Sync',
+            onclick: sync,
+            default: true
+          },
+          {
+            text: 'Cancel'
+          }
+        ]
+      ) 
+      return true
+    }
+  }
+
+  return true
+}
+
+function autoCloze(view: EditorView): boolean {
+  const doc = view.state.doc.toString()
+  const tree = syntaxTree(view.state)
+  const trs = []
+
+  function cloze(start: number, end: number) {
+    let ord = currentOrdinal(view)
+
+    // Find all single `:` not followed by a cloze
+    for (const m of doc.slice(start, end).matchAll(/(?<!:):(?!:|\s*\{\{c\d+::).*/g)) {
+      const cursor = tree.cursorAt(m.index + start)
+      console.log(`--${cursor.name}`)
+      // Only colons in paragraph and tables are parsed (list items contain paragraphs)
+      if (!['Paragraph', 'TableRow', 'TableCell'].includes(cursor.name))
+        continue
+
+      let from = m.index + start + 1
+      let eat = from
+      while (doc[eat] === ' ' || doc[eat] === '\t') eat++
+      let to: number
+      let headspace = ' '
+      let tailspace = ''
+
+      if (cursor.name === 'Paragraph') {
+        const peek = tree.cursorAt(m.index + start) // Can't use copy of reference
+        to = doc.slice(from, cursor.to).search(/(?:  |\\)\n/)
+        if (to > -1) {
+          // Single line
+          to += from
+        } else if (peek.name === 'BulletList' || peek.name === 'OrderedList') {
+          console.log(2)
+          // Include trailing list
+          to = peek.to
+          // Convoluted indent math as it seem preceding paragraph eats one char from indent
+          const indent = (peek.from - cursor.to - 1)/3
+          tailspace = `\n\n${' '.repeat(indent*4)}`
+        } else {
+          // Wrap any other cases to paragraph end
+          to = cursor.to
+        }
+      } else if (cursor.name === 'TableCell') {
+        eat = from = cursor.from
+        while (doc[eat] === ' ' || doc[eat] === '\t') eat++
+        to = cursor.to
+      } else if (cursor.name === 'TableRow') {
+        // Special case: table cell starts with ':' → match in TableRow
+        cursor.next(true) // Step int TableDelimiter
+        cursor.next(true) // Step into cell
+        from = cursor.from
+        eat = from + 1 // The ':'
+        to = cursor.to
+        headspace = ''
+      }
+
+      console.log(`pushing ->${from}-${eat}-${to}-${ord}-${tailspace}<-`)
+      trs.push(
+        {
+          changes: {
+            from: from, to: eat,
+            insert: `${headspace}{{c${++ord}::`
+          }
+        },
+        {
+          changes: {
+            from: to, to: to,
+            insert: `${tailspace}}}`
+          }
+        }
+      ) 
+    }
+  }
+
+  const selection = view.state.selection
+
+  if (selection.ranges.length === 1 && selection.ranges[0].empty)
+    cloze(0, doc.length)
+  else
+    for (const rng of selection.ranges) cloze(rng.from, rng.to)
+  view.dispatch(...trs)
+  return true
+}
+
+export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections, sortClozes, syncClozes, autoCloze}

@@ -1,7 +1,7 @@
 from aqt import mw, QPushButton, QMessageBox, gui_hooks
 
 from aqt.utils import *
-from . import field_input, window_input, browser_sort_field
+from . import field, window, browser_sort
 from .constants import *
 from .version import *
 
@@ -94,12 +94,12 @@ if len(msgs) > 0:
     msg_box.addButton(QPushButton('Ok'), QMessageBox.ButtonRole.YesRole)
     msg_box.exec()
 
-if config.get(FIELD_INPUT) or config.get(CONVERTER):
-    field_input.init(config)
+if config.get(FIELD) or config.get(CONVERTER):
+    field.init(config)
 
-if config.get(WINDOW_INPUT) or config.get(CONVERTER):
-    window_input.init(config)
+if config.get(WINDOW) or config.get(CONVERTER):
+    window.init(config)
 
 if config.get(GENERAL) and config[GENERAL].get(SORT_FIELD):
-    gui_hooks.browser_did_change_row.append(browser_sort_field.clear_cache)
-    gui_hooks.browser_did_fetch_row.append(browser_sort_field.truncate)
+    gui_hooks.browser_did_change_row.append(browser_sort.clear_cache)
+    gui_hooks.browser_did_fetch_row.append(browser_sort.truncate)

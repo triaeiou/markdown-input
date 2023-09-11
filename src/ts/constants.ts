@@ -1,7 +1,7 @@
 // Sync with constants.py
 
 // Field input
-export const FIELD_INPUT = 'Field input'
+export const FIELD = 'Field input'
 export const SC_TOGGLE = 'Shortcut'
 export const SC_RICH = "Rich text shortcut"
 export const SC_NEXT = "Next field"
@@ -11,7 +11,7 @@ export const CYCLE_RICH_MD = "Cycle rich text/Markdown"
 export const HIDE_TOOL = "Autohide toolbar"
 
 // Window input
-export const WINDOW_INPUT = "Window input"
+export const WINDOW = "Window input"
 export const WINDOW_MODE = "Mode"
 export const SC_OPEN = 'Shortcut'
 export const SC_ACCEPT = "Shortcut accept"

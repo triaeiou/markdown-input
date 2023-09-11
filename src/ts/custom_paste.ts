@@ -13,7 +13,7 @@ interface Contents {
   image: boolean
 }
 
-function _paste(view: EditorView, format: 'md'|'txt', transform?: 'strip'|'append') {
+function _paste(view: EditorView, format: 'md'|'txt'|'raw', transform?: 'strip'|'append') {
 
   function objectify(val: string|object): object {
     return typeof(val) === 'object'
@@ -33,8 +33,7 @@ function _paste(view: EditorView, format: 'md'|'txt', transform?: 'strip'|'appen
       // Map to new ordinals
       let ord = currentOrdinal(view)
       const ords_map = {}
-      for (const o of ords) ords_map[o] = ++ord
-
+      for (const o of ords) ords_map[o] ||= ++ord
       // Then find and replace
       return txt.replace(/\{\{c(\d+)::/g, (match, p1) => {
         return `{{c${ords_map[parseInt(p1)]}::`
@@ -73,7 +72,7 @@ function _paste(view: EditorView, format: 'md'|'txt', transform?: 'strip'|'appen
         }
       })
     } else if (contents.text) {
-      bridgeCommand('clipboard-text', (txt: string) => {
+      bridgeCommand(format === 'raw' ? 'clipboard-raw' : 'clipboard-text', (txt: string) => {
         txt = tr(transform, txt)
         write_to_dom(txt, txt.length)
       })
@@ -98,6 +97,7 @@ const pasteMarkdownAppend = (view: EditorView) => {return _paste(view, 'md', 'ap
 const pasteText = (view: EditorView) => {return _paste(view, 'txt')}
 const pasteTextStrip = (view: EditorView) => {return _paste(view, 'txt', 'strip')}
 const pasteTextAppend = (view: EditorView) => {return _paste(view, 'txt', 'append')}
+const pasteRaw = (view: EditorView) => {return _paste(view, 'raw')}
 
 /**
  * TODO
@@ -105,4 +105,4 @@ const pasteTextAppend = (view: EditorView) => {return _paste(view, 'txt', 'appen
  * Add text clean to detect lists and possibly tables?
  */
 
-export {customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip}
+export {customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip, pasteRaw}

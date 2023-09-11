@@ -21,12 +21,12 @@ const output = {
 
 export default [
   {
-    input: "src/ts/field_input.ts",
+    input: "src/ts/field.ts",
     plugins: plugins,
     output: output
-  } ,
+  }  ,
   {
-    input: "src/ts/window_input.ts",
+    input: "src/ts/window.ts",
     plugins: plugins,
     output: output
   }

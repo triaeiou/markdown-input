@@ -1,60 +1,37 @@
-import { EditorView } from "@codemirror/view"
+import { EditorView } from '@codemirror/view'
 
-interface ButtonAction {
-    id: string
+interface Button {
+    text: string
     onclick?: (event: Event) => void
     default?: boolean
 }
 
-class Dialog {
-    view: EditorView
-    html: string
-    btns: ButtonAction[]
-    dom?: HTMLElement
-
-    constructor (view: EditorView, html: string, buttons: ButtonAction[]) {
-        this.view = view
-        this.html = html
-        this.btns = buttons
+function dialog(view: EditorView, html: string, buttons: Button[]) {
+    let dlg = document.querySelector('.cm-editor .cm-dialog') as HTMLDialogElement
+    if (!dlg) {
+        dlg = document.createElement('dialog') as HTMLDialogElement
+        dlg.classList.add('cm-panels', 'cm-panel', 'cm-dialog')
+        dlg.innerHTML = '<div class="cm-dialog-content"></div><div class="cm-dialog-buttons"></div>'
+        view.dom.appendChild(dlg)
     }
-
-    keyhandler(evt: KeyboardEvent) {
-        if (evt.key === 'Escape' && !(evt.shiftKey || evt.altKey || evt.ctrlKey || evt.metaKey)) {
-            this.close()
-            return true
-        }            
-        return false
+    dlg.querySelector('.cm-dialog-content').innerHTML = html
+    const btns = dlg.querySelector('.cm-dialog-buttons')
+    btns.innerHTML = ''
+    let focus: HTMLButtonElement
+    for (const btn of buttons) {
+        const el = document.createElement('button') as HTMLButtonElement
+        el.classList.add('cm-button')
+        el.innerHTML = btn.text
+        el.addEventListener('click', (evt) => {
+            dlg.close()
+            btn.onclick?.(evt)
+        })
+        if (btn.default) focus = el
+        btns.appendChild(el)
     }
-
-    show() {
-        this.dom = document.createElement('div')
-        this.dom.style.cssText = 'position: absolut; top: 0; left: 0; width: 100%; height: 100%; background-color: transparent; display: flex;'
-        const widget = document.createElement('div')
-        widget.style.cssText = 'margin: auto;'
-        widget.innerHTML = this.html
-        this.dom.appendChild(widget)
-        for (const btn of this.btns) {
-            widget.querySelector(`#${btn.id}`)?.addEventListener('click', (evt) => {
-                this.close()
-                if (btn.onclick) btn.onclick(evt)
-            })
-        }
-        this.dom = this.view.dom.parentElement.appendChild(this.dom)
-        //this.dom = document.body.appendChild(this.dom)
-        for (const btn of this.btns) {
-            if(btn.default) {
-                (this.dom.querySelector(`#${btn.id}`) as HTMLElement).focus()
-                break
-            }
-        }
-        this.dom.addEventListener('keydown', this.keyhandler)
-    }
-
-    close() {
-        this.dom.removeEventListener('keydown', this.keyhandler)
-        this.view.dom.parentElement.removeChild(this.dom)
-    }
+    if (focus) focus.focus()
+    dlg.showModal()
 }
 
-export type {ButtonAction}
-export {Dialog}
+export type {Button}
+export {dialog}

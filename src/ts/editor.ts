@@ -35,11 +35,6 @@ const lezer_exts = [
   Underline
 ]
 
-const ping = (view: EditorView) => {
-  console.log("ping!")
-  return true
-}
-
 class Editor {
   cm: EditorView
   extensions: (Extension|LanguageSupport|ViewPlugin<any>)[]

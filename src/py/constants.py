@@ -3,7 +3,7 @@ import os
 # Sync with constants.ts
 
 # Field input
-FIELD_INPUT = 'Field input'
+FIELD = 'Field input'
 SC_TOGGLE = 'Shortcut'
 SC_RICH = "Rich text shortcut"
 SC_NEXT = "Next field"
@@ -12,7 +12,7 @@ FIELD_DEFAULT = 'Default field state'
 CYCLE_RICH_MD = "Cycle rich text/Markdown"
 
 # Window input
-WINDOW_INPUT = "Window input"
+WINDOW = "Window input"
 WINDOW_MODE = "Mode" # "field", "note"
 SC_OPEN = 'Shortcut'
 SC_ACCEPT = "Shortcut accept"
@@ -41,3 +41,4 @@ SORT_FIELD = "Browser sort field"
 ADDON_PATH = os.path.dirname(__file__)
 ADDON_RELURL = "/".join(('_addons', os.path.split(ADDON_PATH)[1]))
 MDI = "MDI"
+USER_FILES = os.path.join(ADDON_PATH, 'user_files')

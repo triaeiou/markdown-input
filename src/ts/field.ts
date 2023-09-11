@@ -1,14 +1,14 @@
 // @ts-ignore FIXME: how to import correctly?
 import type { EditorFieldAPI } from "anki/ts/editor/EditorField.svelte"
-import { EditorView, KeyBinding } from "@codemirror/view"
+import { EditorView } from "@codemirror/view"
 import { Editor } from "./editor"
 import { Converter } from "anki-md-html"
 import { ancestor } from "./utils"
 import { customPaste } from "./custom_paste"
 import { CustomInputClass } from "./custom_input"
-import { parse_config } from "./config"
-import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_DEFAULT, FIELD_INPUT,
-  SC_TOGGLE, HIDE_TOOL, MDI, Configuration, KEYMAP, PASTE, SEARCH } from "./constants"
+import { parse } from "./config"
+import { CONVERTER, CYCLE_RICH_MD, EDITOR, FIELD_DEFAULT, FIELD,
+  SC_TOGGLE, HIDE_TOOL, MDI, Configuration, KEYMAP, SEARCH } from "./constants"
 
 const MD = '<!--?xml version="1.0" encoding="UTF-8"?--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="mdi-md-hollow" width="24" height="24" viewBox="0 0 208 128"><path clip-rule="evenodd" d="m15 10c-2.7614 0-5 2.2386-5 5v98c0 2.761 2.2386 5 5 5h178c2.761 0 5-2.239 5-5v-98c0-2.7614-2.239-5-5-5zm-15 5c0-8.28427 6.71573-15 15-15h178c8.284 0 15 6.71573 15 15v98c0 8.284-6.716 15-15 15h-178c-8.28427 0-15-6.716-15-15z" fill-rule="evenodd"/><path d="m30 98v-68h20l20 25 20-25h20v68h-20v-39l-20 25-20-25v39zm125 0-30-33h20v-35h20v35h20z"/></svg>'
 
@@ -43,7 +43,7 @@ function create_editor(parent: HTMLDivElement, onchange: (html: string) => void)
   }
 
   // Handler for toggling toolbar visibility
-  if (_config[FIELD_INPUT]?.[HIDE_TOOL]) {
+  if (_config[FIELD]?.[HIDE_TOOL]) {
     domEventHandlers['focusout'] = function (evt) {
       if (
         ancestor((evt.relatedTarget as HTMLElement), `.note-editor`) &&
@@ -86,10 +86,10 @@ function set_content(html: string) {
 /////////////////////////////////////////////////////////////////////////////
 // Non-arrow function (for `this` use) to set field input default state
 function onadd() {
-  if (_config[FIELD_INPUT]?.[FIELD_DEFAULT]?.toLowerCase() === 'markdown') {
+  if (_config[FIELD]?.[FIELD_DEFAULT]?.toLowerCase() === 'markdown') {
     this.toggle()
     this.toggle_rich()
-  } else if (_config[FIELD_INPUT]?.[FIELD_DEFAULT]?.toLowerCase() === 'rich text/markdown') {
+  } else if (_config[FIELD]?.[FIELD_DEFAULT]?.toLowerCase() === 'rich text/markdown') {
     this.toggle()
     // Ugly temporary hack to focus first Markdown input initially
     if(!_editor_count) {
@@ -108,10 +108,10 @@ function onadd() {
 /////////////////////////////////////////////////////////////////////////////
 // Setup event listeners and configuration - create CM instances only on demand
 function init(cfg: Configuration) {
-  _config = parse_config(cfg)
+  _config = parse(cfg)
   _converter = new Converter(_config[CONVERTER])
   let tip = "Toggle Markdown input"
-  if (_config[FIELD_INPUT]?.[SC_TOGGLE]) tip += ` (${_config[FIELD_INPUT][SC_TOGGLE]})`
+  if (_config[FIELD]?.[SC_TOGGLE]) tip += ` (${_config[FIELD][SC_TOGGLE]})`
   _config[MDI] = new CustomInputClass({
     class_name: "markdown-input",
     tooltip: tip,
@@ -132,7 +132,7 @@ function toggle(field: number | EditorFieldAPI) {
   else do_toggle(field)
 
   function do_toggle(api) {
-    if (_config[FIELD_INPUT]?.[CYCLE_RICH_MD] && api.visible() !== api.rich_visible()) {
+    if (_config[FIELD]?.[CYCLE_RICH_MD] && api.visible() !== api.rich_visible()) {
       api.toggle(true)
       api.toggle_rich(true)
     } else api.toggle()

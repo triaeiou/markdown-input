@@ -3,7 +3,8 @@ import aqt, os, json, base64, re
 from aqt.utils import *
 from aqt.qt import QObject, QShortcut, QRect, QMainWindow
 from .constants import *
-from .utils import bridge_handler, get_path
+from .utils import get_path
+from .bridge import handler
 
 _config = {}
 _dlgs = {}
@@ -13,8 +14,8 @@ class Bridge(QObject):
     """Class to handle js bridge"""
     @pyqtSlot(str, result=str)
     def cmd(self, cmd):
-        if res := bridge_handler(cmd):
-            return res
+        if res := handler(cmd):
+            return json.dumps(res)
         return None
 
 ###########################################################################
@@ -60,7 +61,7 @@ class IM_window(QMainWindow):
             <link rel=stylesheet href="_anki/css/webview.css">
             <link rel=stylesheet href="{ADDON_RELURL}/mdi.css">
             <link rel=stylesheet href="{ADDON_RELURL}/{get_path('cm.css')}">
-            <script src="{ADDON_RELURL}/window_input.js"></script>
+            <script src="{ADDON_RELURL}/window.js"></script>
             <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
             <script type="text/javascript">
                 var pycmd, bridgeCommand
@@ -120,7 +121,7 @@ class IM_window(QMainWindow):
         self.web.page().runJavaScript(f'''(function () {{
             return mdi_editor.get_html();
         }})();''', save_field)
-        _config[WINDOW_INPUT][LAST_GEOM] = base64.b64encode(self.saveGeometry()).decode('utf-8')
+        _config[WINDOW][LAST_GEOM] = base64.b64encode(self.saveGeometry()).decode('utf-8')
         aqt.mw.addonManager.writeConfig(__name__, _config)
         super().close()
 
@@ -128,7 +129,7 @@ class IM_window(QMainWindow):
     def reject(self):
         """Main window reject"""
         global _config
-        _config[WINDOW_INPUT][LAST_GEOM] = base64.b64encode(self.saveGeometry()).decode('utf-8')
+        _config[WINDOW][LAST_GEOM] = base64.b64encode(self.saveGeometry()).decode('utf-8')
         aqt.mw.addonManager.writeConfig(__name__, _config)
         super().close()
 
@@ -140,14 +141,14 @@ def edit_field(editor: aqt.editor.Editor):
     if editor.currentField == None:
         return
     dlg = IM_window(editor, editor.note, editor.currentField)
-    if _config[WINDOW_INPUT][SC_ACCEPT]:
-        QShortcut(_config[WINDOW_INPUT][SC_ACCEPT], dlg).activated.connect(dlg.accept)
-    if _config[WINDOW_INPUT][SC_REJECT]:
-        QShortcut(_config[WINDOW_INPUT][SC_REJECT], dlg).activated.connect(dlg.reject)
+    if _config[WINDOW][SC_ACCEPT]:
+        QShortcut(_config[WINDOW][SC_ACCEPT], dlg).activated.connect(dlg.accept)
+    if _config[WINDOW][SC_REJECT]:
+        QShortcut(_config[WINDOW][SC_REJECT], dlg).activated.connect(dlg.reject)
 
-    if _config[WINDOW_INPUT][SIZE_MODE].lower() == 'last':
-        dlg.restoreGeometry(base64.b64decode(_config[WINDOW_INPUT][LAST_GEOM]))
-    elif match:= re.match(r'^(\d+)x(\d+)', _config[WINDOW_INPUT][SIZE_MODE]):
+    if _config[WINDOW][SIZE_MODE].lower() == 'last':
+        dlg.restoreGeometry(base64.b64decode(_config[WINDOW][LAST_GEOM]))
+    elif match:= re.match(r'^(\d+)x(\d+)', _config[WINDOW][SIZE_MODE]):
         par_geom = editor.parentWindow.geometry()
         geom = QRect(par_geom)
         scr_geom = aqt.mw.app.primaryScreen().geometry()
@@ -179,8 +180,8 @@ def init(cfg: object):
             os.path.join(ADDON_PATH, "markdown.png"),
             "md_dlg_btn",
             edit_field,
-            tip=f"Markdown Input ({_config[WINDOW_INPUT][SC_OPEN]})",
-            keys=_config[WINDOW_INPUT][SC_OPEN]
+            tip=f"Markdown Input ({_config[WINDOW][SC_OPEN]})",
+            keys=_config[WINDOW][SC_OPEN]
             )
         buttons.append(btn)
         return buttons
