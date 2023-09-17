@@ -266,78 +266,75 @@ function autoCloze(view: EditorView): boolean {
 
   function cloze(start: number, end: number) {
     let ord = currentOrdinal(view)
+    const cursor = tree.cursorAt(start)
+    cursor.next(true) // Step into document
+    cursor.iterate(enter)
 
-    // Find all single `:` not followed by a cloze
-    for (const m of doc.slice(start, end).matchAll(/(?<!:):(?!:|\s*\{\{c\d+::).*/g)) {
-      const cursor = tree.cursorAt(m.index + start)
-      console.log(`--${cursor.name}`)
-      // Only colons in paragraph and tables are parsed (list items contain paragraphs)
-      if (!['Paragraph', 'TableRow', 'TableCell'].includes(cursor.name))
-        continue
-
-      let from = m.index + start + 1
-      let eat = from
-      while (doc[eat] === ' ' || doc[eat] === '\t') eat++
-      let to: number
-      let headspace = ' '
-      let tailspace = ''
-
-      if (cursor.name === 'Paragraph') {
-        const peek = tree.cursorAt(m.index + start) // Can't use copy of reference
-        to = doc.slice(from, cursor.to).search(/(?:  |\\)\n/)
-        if (to > -1) {
-          // Single line
-          to += from
-        } else if (peek.name === 'BulletList' || peek.name === 'OrderedList') {
-          console.log(2)
-          // Include trailing list
-          to = peek.to
-          // Convoluted indent math as it seem preceding paragraph eats one char from indent
-          const indent = (peek.from - cursor.to - 1)/3
-          tailspace = `\n\n${' '.repeat(indent*4)}`
-        } else {
-          // Wrap any other cases to paragraph end
-          to = cursor.to
+    function enter(nd: SyntaxNodeRef): boolean {
+      if (['BulletList', 'OrderedList', 'ListItem', 'Table', 'TableRow'].includes(cursor.name)) {
+        // Recurse into
+        return true
+      } else if (cursor.name === 'Paragraph') {
+        for (const m of doc.slice(cursor.from, cursor.to).matchAll(/(?<!:|\\):(?!:|\s*\{\{c\d+::).*/g)) {
+          const from = cursor.from + m.index + 1
+          let eat = from
+          while ([' ', '\t'].includes(doc[eat])) eat++
+          let to = doc.slice(from, cursor.to).search(/(?:  |\\)$/m)
+          const head = ` {{c${++ord}::`
+          let tail = '}}'
+          const peek = tree.cursorAt(cursor.from + m.index) // Can't use copy of reference
+          peek.nextSibling()
+          if (to > -1) {
+            // Single line
+            to += from
+          } else if (peek.name === 'BulletList' || peek.name === 'OrderedList') {
+            // Include trailing list
+            to = peek.to
+            // Convoluted indent math as it seem preceding paragraph eats one char from indent
+            const indent = (peek.from - cursor.to - 1)/3
+            tail = `\n\n${' '.repeat(indent*4)}` + tail
+          } else {
+            // Wrap any other cases to paragraph end
+            to = cursor.to
+          }
+          trs.push(
+            {changes: {from: from, to: eat, insert: head}},
+            {changes: {from: to, to: to, insert: tail}}
+          )
         }
       } else if (cursor.name === 'TableCell') {
-        eat = from = cursor.from
-        while (doc[eat] === ' ' || doc[eat] === '\t') eat++
-        to = cursor.to
-      } else if (cursor.name === 'TableRow') {
-        // Special case: table cell starts with ':' → match in TableRow
-        cursor.next(true) // Step int TableDelimiter
-        cursor.next(true) // Step into cell
-        from = cursor.from
-        eat = from + 1 // The ':'
-        to = cursor.to
-        headspace = ''
-      }
-
-      console.log(`pushing ->${from}-${eat}-${to}-${ord}-${tailspace}<-`)
-      trs.push(
-        {
-          changes: {
-            from: from, to: eat,
-            insert: `${headspace}{{c${++ord}::`
-          }
-        },
-        {
-          changes: {
-            from: to, to: to,
-            insert: `${tailspace}}}`
-          }
+        const cell = doc.slice(cursor.from, cursor.to)
+        let m
+        // Cloze entire cell
+        if (m = cell.match(/^\s*:(?!:|\s*\{\{c\d+::)\s*(.*?)\s*$/)) {
+          trs.push({changes: {
+            from: cursor.from,
+            to: cursor.to,
+            insert: `{{c${++ord}::${m[1]}}}`}
+          })
+        // Close after `:`
+        } else if (m = cell.match(/(?<!:|\\):(?!:|\s*\{\{c\d+::)\s*(.*)\s*$/)) {
+          trs.push({changes: {
+            from: cursor.from + m.index + 1,
+            to: cursor.to,
+            insert: ` {{c${++ord}::${m[1]}}}`}
+          })  
         }
-      ) 
+      }
+  
+      // No need to recurse further
+      return false
     }
   }
-
   const selection = view.state.selection
 
   if (selection.ranges.length === 1 && selection.ranges[0].empty)
     cloze(0, doc.length)
   else
     for (const rng of selection.ranges) cloze(rng.from, rng.to)
-  view.dispatch(...trs)
+
+  // Reverse order → outer cloze before inner → correct placement
+  view.dispatch(...trs.reverse())
   return true
 }
 

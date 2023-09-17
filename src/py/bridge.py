@@ -168,4 +168,4 @@ def clean_text(text: str):
         flags=re.VERBOSE + re.MULTILINE
     )
     
-    return text
+    return text.replace('\u00A0', ' ')

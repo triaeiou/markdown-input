@@ -19,7 +19,9 @@
 	"Converter": {
 		"Markdown format": {
 			"bullet": "-",
-			"listItemIndent": "one",
+			"listItemIndent": "tab",
+			"tightenLists": true,
+			"listItemIndentLeadOnly": true,
 			"ruleRepetition": 10,
 			"tightDefinitions": true,
 			"fences": true,
@@ -37,75 +39,101 @@
 		}
 	},
 	"CodeMirror": {
-		"keymap": [{
+		"keymap": [
+			{
 				"key": "Mod-f",
+				"preventDefault": true,
 				"run": "openSearchPanel",
-				"scope": "editor search-panel",
-				"preventDefault": true
-			},{
+				"scope": "editor search-panel"
+			},
+			{
 				"key": "Mod-n",
+				"preventDefault": true,
 				"run": "findNext",
-				"shift": "findPrevious",
 				"scope": "editor search-panel",
-				"preventDefault": true
-			},{
+				"shift": "findPrevious"
+			},
+			{
 				"key": "Mod-d",
-				"run": "selectNextOccurrence",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "selectNextOccurrence"
+			},
+			{
 				"key": "Mod-Shift-l",
-				"run": "selectSelectionMatches",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "selectSelectionMatches"
+			},
+			{
 				"key": "Mod-g",
-				"run": "gotoLine",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "gotoLine"
+			},
+			{
 				"key": "Escape",
+				"preventDefault": true,
 				"run": "closeSearchPanel",
 				"scope": "editor, editor search-panel",
-				"preventDefault": true,
 				"stopPropagation": true
-			},{
+			},
+			{
 				"key": "Mod-Alt-C",
-				"run": "clozeCurrent",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "clozeCurrent"
+			},
+			{
 				"key": "Mod-Shift-c",
-				"run": "clozeNext",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "clozeNext"
+			},
+			{
 				"key": "Mod-Shift-u",
-				"run": "unclozeSelections",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "unclozeSelections"
+			},
+			{
 				"key": "Mod-s",
 				"run": "sortClozes",
 				"preventDefault": true
-			},{
-				"key": "Mod-Shift-S",
+			},
+			{
+				"key": "Mod-Shift-s",
 				"run": "syncClozes",
 				"preventDefault": true
-			},{
+			},
+			{
+				"key": "Mod-Shift-a",
+				"run": "autoCloze",
+				"preventDefault": true
+			},
+			{
 				"key": "Mod-Shift-j",
-				"run": "joinLines",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "joinLines"
+			},
+			{
 				"key": "Mod-v",
-				"run": "pasteMarkdown",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "pasteMarkdownAppend"
+			},
+			{
 				"key": "Mod-Shift-v",
-				"run": "pasteRaw",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "pasteMarkdown"
+			},
+			{
 				"key": "Alt-Shift-v",
-				"run": "pasteMarkdownAppend",
-				"preventDefault": true
-			},{
+				"preventDefault": true,
+				"run": "pasteRaw"
+			},
+			{
 				"key": "Alt-Shift-u",
-				"run": "pasteMarkdownStrip",
-				"preventDefault": true
+				"preventDefault": true,
+				"run": "pasteMarkdownStrip"
+			},
+			{
+				"key": "Mod-h",
+				"preventDefault": true,
+				"run": "help"
 			}
 		],
 		"search": {

@@ -65,17 +65,36 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - Markdown syntax highlighting and auto fill (continue lists, autoindent etc.).
 - Undo history.
 - Multiple drawable selections.
-- Search and replace, `Ctrl+F`, note: the Anki editor eats `Ctrl+F`, set to other shortcut in config or remap the Anki editor shortcuts with [Customize Keyboard Shortcuts](https://ankiweb.net/shared/info/24411424) or similar.
-- Insert cloze deletions
-  - Cloze without increment: `Ctrl+Alt+C`/`Ctrl+Alt+Shift+C` - At the time of writing `CodeMirror` key detection logic does not allow differentiation between `Ctrl+Alt+Shift-C` and `Ctrl+Alt-C` in Qt, at least on Windows where `Ctrl-Alt` results in a upper case char being sent to `CodeMirror`.
-  - Cloze with increment: `Ctrl+Shift+C` (with multiple selections this will cloze each incrementally)
-  - If you feel the cloze deletion tags end up in the wrong place please make sure you understand how Markdown is converted to HTML (notably line breaks and empty lines).
-- Extended pasting functionality
-  - Paste HTML (also attempts to clean up HTML received from `Microsoft Word`) as Markdown or pure text, paste images the same way the "rich text input" does, paste so that any clozes in the clipboard are amended to follow after existing clozes or strip the completely.
-- Remove clozes in selection or the "one the cursor currently is in".
+- Search and replace with configurable default options (`caseSensitive`, `regexp`, `wholeWord`).
+- Insert cloze deletions as well as a few different functions to manipulate clozes (see below).
+- Customize Markdown input editor shortcuts (i.e. *inside* the field/window, not the core Anki editor) in `config.json`, see `config.json` and [CodeMirror documentation](https://codemirror.net/docs/ref/#view.KeyBinding) for further information.
+  - Note that the default Anki shortcuts "eats" some of these before they ever reach the editor so either set to other key sequebces in config or unmap/remap the Anki editor shortcuts with [Override shortcuts](https://ankiweb.net/shared/info/604635542), [Customize Keyboard Shortcuts](https://ankiweb.net/shared/info/24411424) or similar.
+  - The format of `CodeMirror` shortcuts are `CodeMirror`-style, modifiers and keys separated by `-` rather than `+` and `Mod` corresponds to `Ctrl` on Windows and `Meta` on MacOS.
+  - Also note that `Ctrl-Alt` results in the char being interpreted as upper case, amend the sequence appropriately, i.e. `Ctrl-Alt-x` never fires, only `Ctrl-Alt-X`.
 - Customize the editor styling by copying `cm.css` into `user_files` subdirectory and customize. Consider using `--var(xyz)` to use the Anki colors from the current theme (i.e. follows light/dark mode).
-- Customize Markdown input editor shortcuts (i.e. *inside* the field/window, not the core Anki editor) in `config.json`, see `config.json` and [CodeMirror documentation](https://codemirror.net/docs/ref/#view.KeyBinding) for further information. Available functions to map are all in [@codemirror/commands](https://github.com/codemirror/commands/blob/main/src/commands.ts), [@codemirror/search](https://github.com/codemirror/search/blob/main/src/search.ts) and custom commands `help`, `clozeNext`, `clozeCurrent`, `joinLines`, `unclozeSelections`, `syncClozes`, `pasteMarkdown`, `pasteMarkdownAppend`, `pasteMarkdownStrip`, `pasteText`, `pasteTextAppend` and `pasteTextStrip`.
-- Configurable search/replace default options (`caseSensitive`, `regexp`, `wholeWord`).
+
+### Editor commands
+
+Available editor commands are most standard CodeMirror commands (see [@codemirror/commands](https://github.com/codemirror/commands/blob/main/src/commands.ts), [@codemirror/search](https://github.com/codemirror/search/blob/main/src/search.ts)), for instance `openSearchPanel` (default `Ctrl-f`), `findNext` (default `Ctrl-n`), `selectNextOccurence` (default: `Ctrl-d`), `selectSelectionMatches` (default `Ctrl-Shift-l`) and `gotoLine` (default `Ctrl-g`). Additionally the following custom functions are available:
+- `help`: Display short help dialog, lists all mapped `Markdown input` shortcuts (default `Ctrl-h`).
+- `joinLines`: Join all lines in selection(s), or next line when no selection is made, with a space between each (default `Ctrl-Shift-j`).
+- `clozeNext`: Cloze selection(s) incrementing cloze ordinal for each (default `Ctrl-Shift-c`).
+- `clozeCurrent`: Cloze selection(s) without increment (default `Ctrl-Alt-C`/`Ctrl-Alt-Shift-C`).
+- `autoCloze`: In selection(s), or the entire document if no selection is made, insert incrementing clozes around text following any colon (default `Ctrl-Shift-a`) according to the following logic:
+    - In a paragraph cloze until hard line break (double space before newline or backslash newline) or end of paragraph.
+      - If clozing to end of paragraph and the paragraph is followed by a list, also include the list in the cloze.
+    - In a list item cloze until end of list item.
+      - If the next item is a nested list also include this in the cloze.
+    - In a table cell encloze until the end of the table cell.
+      - Special case, if the cell starts with a `:` the entire cell will be enclozed (and the `:` removed)
+    - `:` in all other places will be disregarded (e.g. in headings, table header row etc.) as will all non-singel (`::`) or escaped (`\:`) colons. NB: `::` is the start of a hint within a cloze, therefore using `::` for "colons that shouldn't be clozed" may not give the results you expect.
+    - No cloze will be inserted if there already is a cloze at that location.
+- `unclozeSelections`: Remove all clozes within selection(s), or any cloze spanning the current cursor position if no selection is made, leaving the contents intact (default `Ctrl-Shift-u`).
+- `sortCloze`: Restructure cloze ordinals in ascending order, keeping groups of same cloze ordinal together. Note: this will mess upp the scheduling if you have started to learn the cards (default `Ctrl-s`).
+- `syncClozes`: Restructure cloze ordinals within selection(s) so the all have the same ordinal as the first ordinal found (default `Ctrl-Shift-s`).
+- `pasteMarkdown`/`pasteMarkdownAppend`/`pasteMarkdownStrip`: Convert any HTML in the clipboard to Markdown before pasting. `pasteMarkdownAppend` also amends any pasted clozes to come after any existing ordinals in the document. `pasteMarkdownStrip` also strips any cloze tags, but keeps the content, prior to pasting. (`pasteMarkdownAppend` default `Ctrl-v`, `pasteMarkdown` default `Ctrl-Shift-v`, `pasteMarkdownStrip` default `Alt-Shift-u`)
+- `pasteText`/`pasteTextAppend`/`pasteTextStrip`: Similar to the equivalent `pasteMarkdown` but disregards uses the text version of the clipboard, trying to amend any lists to correct Markdown formating.
+- `pasteRaw`: Pastes text content of clipboard without any modification (default `Alt-Shift-v`). 
 
 ### Field input mode
 
@@ -96,13 +115,7 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - "Window input mode" can be configured under `Window input`.
 - HTML ↔ Markdown conversion configurable under `Converter`. See [mdastToMarkdown](https://github.com/syntax-tree/mdast-util-to-markdown#tomarkdowntree-options) for `Markdown format` options.
 - Editor configurable under `CodeMirror`. See [CodeMirror documentation](https://codemirror.net/docs/) how to configure.
-- Paste can be congigured in multiple ways (`CodeMirror/keymap`) - note the format of the shortcuts are `CodeMirror`-style (modifiers and keys separated by `-` rather than `+`, also note that `Ctrl-Alt` results in the char being interpreted as upper case, amend the sequence appropriately (`Ctrl-Alt-x` never fires, only `Ctrl-Alt-X`)):
-  - `pasteMarkdown`: Convert HTML in clipboard to Markdown (default for `Ctrl+V`), if there is no HTML in the clipboard it will be pasted as plain text.
-  - `pasteMarkdownAppend`: As `pasteMarkdown` but any clozes in the clipboard are amended so that their numbering is appended to any existing numbering (so it will reorganize cloze numbering to start from `1` if there are no clozes in the text before pasting).
-  - `pasteMarkdownStrip`: As `pasteMarkdown` but any clozes in the clipboard are removed (but their contents are retained).
-  - `pasteText`/`pasteTextAppend`/`pasteTextStrip`: As corresponding `pasteMarkdown` but pasted as plain text.
 - Default Anki behaviour is to use the entire sort field text in the Browser table, `Browser sort field` option (default `true`) instead uses content of first level 1 heading (if existing).
-- Note that Anki shortcuts grab key sequences before they reach the CodeMirror editor, use [Override shortcuts](https://ankiweb.net/shared/info/604635542), [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) or other addon to change the Anki shortcuts as needed. At the time of writing [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) hooks into the Qt/Python for the cloze shortcuts. This means they never reach CodeMirror so unmap (`<nop>`) them in [Customize Keyboard Shortcut](https://ankiweb.net/shared/info/24411424) (the new Anki editor grabs the shortcuts on the JavaScript side).
 - To customize the look of the finished HTML apply custom [CSS](https://www.w3schools.com/Css/) styling (for instance of `<h1/2/3/etc>`, `<table>` `<ul/ol>` etc.) to the note template.
 - To customize the look and feel of the editor, make a copy of `cm.css` (styling of CodeMirror and syntax highlighting) into a `user_files` subdirectory in the addon directory and modify that file (it will be given precedence and not be overwritten on addon update).
 
@@ -168,7 +181,7 @@ To achieve a note editing friendly interface consider using:
   }
   ```
 
-- [Sidebar table](https://ankiweb.net/shared/info/1753198255) to move the note/card table to the side for increased editing space, esp. with `Markdown input``Autohide toolbar` set to `true`
+- [Sidebar table](https://ankiweb.net/shared/info/1753198255) to move the note/card table to the side for increased editing space, esp. with `Markdown input` `Autohide toolbar` set to `true`
 - [Browser Maximize/Hide Table/Editor/Sidebar](https://ankiweb.net/shared/info/1819291495) to toggle hiding the sidebar with a keyboard shortcut (e.g. `Ctrl+Shift+B`)
 
 ## Developers
@@ -194,4 +207,4 @@ Functionality split into different classes to facilitate reuse:
 - 2023-04-26: Improve logic to fix anoying eating of trailing spaces, change search/replace dialog placement so that it is visible without having to scroll.
 - 2023-05-04: Add `rich text/markdown` field default configuration option, add list continuation thanks to [David C.](https://github.com/d-k-bo).
 - 2023-06-01: Table bug fix (tables now non-optional), rename config option from `Table style` to `Tables`, add code block syntax highlighting, add `Browser sort field` option, add styling of cloze tags in the Markdown editor.
-- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "uncloze", "sync clozes" and "help" functionality added.
+- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "uncloze", "auto cloze", "sync clozes" and "help" functionality added. Added Markdown conversion options `tightenLists` (removes blank line before a "tight" list) and `listItemIndentLeadOnly` (when used with `listItemIndent`:`"tab"` aligns nested lists at multiples of 4 spaces but only one space *after* the bullet).
