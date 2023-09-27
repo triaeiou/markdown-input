@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view"
 import { keybindings } from "../config"
-import { dialog } from "./dialog"
+import { dialog } from "./input"
 
 function help(view: EditorView) {
     let msg = 'Loaded keybindings:<table><tbody>'

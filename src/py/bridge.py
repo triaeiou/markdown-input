@@ -1,13 +1,35 @@
-import os, datetime, re, json
+import os, datetime, re, sys, importlib, json
 from bs4 import BeautifulSoup, Tag
-from aqt import QImage, mw, QApplication, QClipboard
+from aqt import QImage, mw, QApplication, QClipboard, gui_hooks
 from anki.utils import namedtmp
 from anki.collection import Config
+from .version import strvercmp
+
+im_utils = -1
+
+def get_addon(addon: list[str]):
+    """
+    Get other addon module if installed
+    """
+    for _id in mw.addonManager.allAddons():
+        meta = mw.addonManager.addon_meta(_id)
+        if meta.enabled and _id in addon and strvercmp(meta.human_version, '1.1.0') >= 0:
+            try:
+                return importlib.import_module(_id)
+            except ModuleNotFoundError:
+                pass
+    return None
 
 def handler(msg: str) -> str:
     """
     Handle bridge messages
     """
+    global im_utils
+    if im_utils == -1:
+        if imu := sys.modules.get('inline-media.utils') or sys.modules.get('683715045.utils'):
+            im_utils = imu
+        else:
+            im_utils = None
     res = None
 
     mime = QApplication.clipboard().mimeData(QClipboard.Mode.Clipboard)
@@ -15,7 +37,8 @@ def handler(msg: str) -> str:
         res = {
             'image': mime.hasImage(),
             'text': mime.hasText(),
-            'html': mime.hasHtml()
+            'html': mime.hasHtml(),
+            'media': bool(im_utils.parse_clipboard()) if im_utils else False
         }
     elif msg == 'clipboard-html':
         res = clean_html(mime.html())
@@ -37,6 +60,14 @@ def handler(msg: str) -> str:
             path = uname + ext
             if os.path.exists(path):
                 res = f"![]({mw.col.media.add_file(path)})"
+    elif msg == 'clipboard-media' or msg == 'clipboard-audio':
+        # Add media to media library and return inline media tag
+        if im_utils:
+            if srcs := im_utils.parse_clipboard():
+                t = 'video' if msg == 'clipboard-media' else 'audio'
+                # needs to be background op
+                if media := im_utils.add_media(srcs[:1], t):
+                    res = im_utils.tag_media(media[0])
 
     return res
 
@@ -156,8 +187,7 @@ def clean_text(text: str):
                 (?:CM|CD|D?C{0,3})?
                 (?:XC|XL|L?X{0,3})?
                 (?:IX|IV|V?I{0,3})
-                [.),:;]
-            ) |
+            )[.),:;] |
             (?P<bullet>[^a-zA-Z#\u00C0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u0400-\u04FF\u0500-\u052F\u0530-\u058F\d])
           )
           (?:\s+\n?)                # Following space(s) and possibly 1 newline

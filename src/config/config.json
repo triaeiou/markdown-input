@@ -20,8 +20,9 @@
 		"Markdown format": {
 			"bullet": "-",
 			"listItemIndent": "tab",
-			"tightenLists": true,
 			"listItemIndentLeadOnly": true,
+			"tightenLists": true,
+			"tightenHeadings": false,
 			"ruleRepetition": 10,
 			"tightDefinitions": true,
 			"fences": true,
@@ -118,17 +119,7 @@
 			{
 				"key": "Mod-Shift-v",
 				"preventDefault": true,
-				"run": "pasteMarkdown"
-			},
-			{
-				"key": "Alt-Shift-v",
-				"preventDefault": true,
-				"run": "pasteRaw"
-			},
-			{
-				"key": "Alt-Shift-u",
-				"preventDefault": true,
-				"run": "pasteMarkdownStrip"
+				"run": "pasteMenu"
 			},
 			{
 				"key": "Mod-h",

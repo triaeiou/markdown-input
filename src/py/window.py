@@ -103,7 +103,7 @@ class IM_window(QMainWindow):
         def save_field(res):
             if not res:
                 return
-            if self.editor.addMode or self.editor.note.id == self.nid:
+            if self.editor.addMode or (self.editor.note and self.editor.note.id == self.nid):
                 note = self.editor.note
                 focus = True
             else:

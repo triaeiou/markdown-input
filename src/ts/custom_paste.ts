@@ -1,6 +1,7 @@
 import {EditorView} from './editor'
 import {Converter} from 'anki-md-html'
 import {currentOrdinal} from './CodeMirror.extensions/cloze'
+import {popmenu} from './CodeMirror.extensions/input'
 
 /** Anki webview js-py bridge */
 declare function bridgeCommand(msg: string): void
@@ -11,9 +12,10 @@ interface Contents {
   html: boolean
   text: boolean
   image: boolean
+  media: boolean
 }
 
-function _paste(view: EditorView, format: 'md'|'txt'|'raw', transform?: 'strip'|'append') {
+function _paste(view: EditorView, format: 'md'|'txt'|'raw'|'media'|'audio', transform?: 'strip'|'append') {
 
   function objectify(val: string|object): object {
     return typeof(val) === 'object'
@@ -71,6 +73,11 @@ function _paste(view: EditorView, format: 'md'|'txt'|'raw', transform?: 'strip'|
           write_to_dom(md, md.length)
         }
       })
+    } else if (contents.media && ['media', 'audio'].includes(format)) {
+      bridgeCommand(format === 'media' ? 'clipboard-media' : 'clipboard-audio', (html: string) => {
+        let md = _paste['converter'].html_to_markdown(html)
+        if (md) write_to_dom(md, md.length)
+      })
     } else if (contents.text) {
       bridgeCommand(format === 'raw' ? 'clipboard-raw' : 'clipboard-text', (txt: string) => {
         txt = tr(transform, txt)
@@ -91,6 +98,23 @@ const customPaste = (converter: Converter) => {
   return []
 }
 
+const pasteMenu = (view: EditorView) => {
+  popmenu(
+    view,
+    [
+      {text: 'Paste as Markdown', onclick: (evt) => {pasteMarkdown(view)}, default: true},
+      {text: 'Paste as Markdown, strip clozes', onclick: (evt) => {pasteMarkdownStrip(view)}, default: false},
+      {text: 'Paste as Markdown, append clozes', onclick: (evt) => {pasteMarkdownAppend(view)}, default: false},
+      {text: 'Paste as text', onclick: (evt) => {pasteText(view)}, default: false},
+      {text: 'Paste as text, strip clozes', onclick: (evt) => {pasteTextStrip(view)}, default: false},
+      {text: 'Paste as text, append clozes', onclick: (evt) => {pasteTextAppend(view)}, default: false},
+      {text: 'Paste raw text', onclick: (evt) => {pasteRaw(view)}, default: false},
+      {text: 'Paste as media', onclick: (evt) => {pasteMedia(view)}, default: false},
+      {text: 'Paste as audio', onclick: (evt) => {pasteAudio(view)}, default: false}
+    ]
+  )
+}
+
 const pasteMarkdown = (view: EditorView) => {return _paste(view, 'md')}
 const pasteMarkdownStrip = (view: EditorView) => {return _paste(view, 'md', 'strip')}
 const pasteMarkdownAppend = (view: EditorView) => {return _paste(view, 'md', 'append')}
@@ -98,11 +122,10 @@ const pasteText = (view: EditorView) => {return _paste(view, 'txt')}
 const pasteTextStrip = (view: EditorView) => {return _paste(view, 'txt', 'strip')}
 const pasteTextAppend = (view: EditorView) => {return _paste(view, 'txt', 'append')}
 const pasteRaw = (view: EditorView) => {return _paste(view, 'raw')}
+const pasteMedia = (view: EditorView) => {return _paste(view, 'media')}
+const pasteAudio = (view: EditorView) => {return _paste(view, 'audio')}
 
-/**
- * TODO
- * Add raw
- * Add text clean to detect lists and possibly tables?
- */
-
-export {customPaste, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip, pasteText, pasteTextAppend, pasteTextStrip, pasteRaw}
+export {
+  customPaste, pasteMenu, pasteMarkdown, pasteMarkdownAppend, pasteMarkdownStrip,
+  pasteText, pasteTextAppend, pasteTextStrip, pasteRaw, pasteMedia, pasteAudio
+}

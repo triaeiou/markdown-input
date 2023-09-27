@@ -80,15 +80,15 @@ Available editor commands are most standard CodeMirror commands (see [@codemirro
 - `joinLines`: Join all lines in selection(s), or next line when no selection is made, with a space between each (default `Ctrl-Shift-j`).
 - `clozeNext`: Cloze selection(s) incrementing cloze ordinal for each (default `Ctrl-Shift-c`).
 - `clozeCurrent`: Cloze selection(s) without increment (default `Ctrl-Alt-C`/`Ctrl-Alt-Shift-C`).
-- `autoCloze`: In selection(s), or the entire document if no selection is made, insert incrementing clozes around text following any colon (default `Ctrl-Shift-a`) according to the following logic:
+- `autoCloze`: In selection(s), or the entire document if no selection is made, insert incrementing clozes around text following any double colon `::` (default `Ctrl-Shift-a`), replacing the `::` with `:`, according to the following logic:
+    - Only consider `::` in paragraphs, list items, table cells and definition lists.
+      - The `::` must be either preceded or followed by a space, tab or newline (to avoid enclozing existing hints `{{c1::answer::hint}}`) and it cannot be preceded by a cloze tag (`{{c1`).
+      - Special case - table cells and definition lists: When starting the cell or definition with `::` (may be preceded by any number of white space) the need for following space or tab is suspended (to allow enclozing the entire cell `|::cell contents|` or definition `:   ::definition`)
     - In a paragraph cloze until hard line break (double space before newline or backslash newline) or end of paragraph.
       - If clozing to end of paragraph and the paragraph is followed by a list, also include the list in the cloze.
     - In a list item cloze until end of list item.
-      - If the next item is a nested list also include this in the cloze.
-    - In a table cell encloze until the end of the table cell.
-      - Special case, if the cell starts with a `:` the entire cell will be enclozed (and the `:` removed)
-    - `:` in all other places will be disregarded (e.g. in headings, table header row etc.) as will all non-singel (`::`) or escaped (`\:`) colons. NB: `::` is the start of a hint within a cloze, therefore using `::` for "colons that shouldn't be clozed" may not give the results you expect.
-    - No cloze will be inserted if there already is a cloze at that location.
+      - If the next item is a nested list also include the nested list in the cloze.
+    - In a table cell or a definition list encloze until the end of the table cell or definition.
 - `unclozeSelections`: Remove all clozes within selection(s), or any cloze spanning the current cursor position if no selection is made, leaving the contents intact (default `Ctrl-Shift-u`).
 - `sortCloze`: Restructure cloze ordinals in ascending order, keeping groups of same cloze ordinal together. Note: this will mess upp the scheduling if you have started to learn the cards (default `Ctrl-s`).
 - `syncClozes`: Restructure cloze ordinals within selection(s) so the all have the same ordinal as the first ordinal found (default `Ctrl-Shift-s`).
@@ -207,4 +207,4 @@ Functionality split into different classes to facilitate reuse:
 - 2023-04-26: Improve logic to fix anoying eating of trailing spaces, change search/replace dialog placement so that it is visible without having to scroll.
 - 2023-05-04: Add `rich text/markdown` field default configuration option, add list continuation thanks to [David C.](https://github.com/d-k-bo).
 - 2023-06-01: Table bug fix (tables now non-optional), rename config option from `Table style` to `Tables`, add code block syntax highlighting, add `Browser sort field` option, add styling of cloze tags in the Markdown editor.
-- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "uncloze", "auto cloze", "sync clozes" and "help" functionality added. Added Markdown conversion options `tightenLists` (removes blank line before a "tight" list) and `listItemIndentLeadOnly` (when used with `listItemIndent`:`"tab"` aligns nested lists at multiples of 4 spaces but only one space *after* the bullet).
+- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "uncloze", "auto cloze", "sync clozes" and "help" functionality added. Added Markdown conversion options `tightenHeadings` (removes blank line after heading of configured level and above, `false` or delete line to remove), `tightenLists` (removes blank line before a "tight" list) and `listItemIndentLeadOnly` (when used with `listItemIndent`:`"tab"` aligns nested lists at multiples of 4 spaces but only one space *after* the bullet).

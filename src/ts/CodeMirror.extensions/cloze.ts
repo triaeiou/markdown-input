@@ -1,14 +1,11 @@
 /**
  * Cloze related functionality
  */
-import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin, showPanel } from "@codemirror/view"
+import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@codemirror/view"
 import { RangeSetBuilder } from "@codemirror/state"
-import { dialog } from "./dialog"
+import { dialog } from "./input"
 import { grow, shrink } from "../utils"
-import { rx } from 'verbose-regexp'
-import { markdown } from "@codemirror/lang-markdown"
-import { MarkdownParser } from "@lezer/markdown"
-import { forceParsing, syntaxTree } from "@codemirror/language"
+import { syntaxTree } from "@codemirror/language"
 import {SyntaxNodeRef} from "@lezer/common"
 
 const CLOZE = Decoration.mark({
@@ -271,53 +268,92 @@ function autoCloze(view: EditorView): boolean {
     cursor.iterate(enter)
 
     function enter(nd: SyntaxNodeRef): boolean {
-      if (['BulletList', 'OrderedList', 'ListItem', 'Table', 'TableRow'].includes(cursor.name)) {
+      if (
+        [ 'BulletList', 'OrderedList', 'ListItem', 'Table', 'TableRow']
+        .includes(cursor.name)
+      ) {
         // Recurse into
         return true
       } else if (cursor.name === 'Paragraph') {
-        for (const m of doc.slice(cursor.from, cursor.to).matchAll(/(?<!:|\\):(?!:|\s*\{\{c\d+::).*/g)) {
-          const from = cursor.from + m.index + 1
-          let eat = from
-          while ([' ', '\t'].includes(doc[eat])) eat++
-          let to = doc.slice(from, cursor.to).search(/(?:  |\\)$/m)
-          const head = ` {{c${++ord}::`
-          let tail = '}}'
-          const peek = tree.cursorAt(cursor.from + m.index) // Can't use copy of reference
-          peek.nextSibling()
-          if (to > -1) {
-            // Single line
-            to += from
-          } else if (peek.name === 'BulletList' || peek.name === 'OrderedList') {
-            // Include trailing list
-            to = peek.to
-            // Convoluted indent math as it seem preceding paragraph eats one char from indent
-            const indent = (peek.from - cursor.to - 1)/3
-            tail = `\n\n${' '.repeat(indent*4)}` + tail
-          } else {
-            // Wrap any other cases to paragraph end
-            to = cursor.to
+        const slice = doc.slice(cursor.from, cursor.to)
+
+        // Special case, dl are paragraphs here
+        // Does it look like a dl (last line `:    something`)
+        if (/(?<=^|\n):(?:[ ]{1,3}|\t)\S.*$/.test(slice)) {
+          for (const m of slice
+            // Pattern: start of dd | ` ::` | `:: ` not preceded by `{{c\d+`
+            .matchAll(/(?<=^:[ ]{1,3}|\t)(?<start>::)|(?<pre>(?<= )::|(?<post>(?<!{{c\d+)::(?= |$)))/gm)
+          ) {
+            const from = cursor.from + m.index
+            // Special case: dd starts with `::` → remove both colons and no space
+            const head = m.groups['start']
+              ? `{{c${++ord}::`
+              : `: {{c${++ord}::`
+            let eat = from + 2
+            while ([' ', '\t'].includes(doc[eat])) eat++
+            const to = eat + doc.slice(eat).search(/$/m)
+            trs.push(
+              {changes: {from: from, to: eat, insert: head}},
+              {changes: {from: to, to: to, insert: '}}'}}
+            )
           }
-          trs.push(
-            {changes: {from: from, to: eat, insert: head}},
-            {changes: {from: to, to: to, insert: tail}}
-          )
+        } else { // Normal paragraph
+          for (const m of slice
+            // Pattern: start of line | ` ::` | `:: ` not preceded by `{{c\d+`
+            .matchAll(/(?<start>(?<=^)::)|(?<pre>(?<= )::)|(?<post>(?<!{{c\d+)::(?= |$))/gm)
+          ) {
+            const from = cursor.from + m.index
+            const head = m.groups['start']
+              ? `{{c${++ord}::`
+              : `: {{c${++ord}::`
+            let feat = 2
+            while ([' ', '\t'].includes(doc[from + feat])) feat++
+            let to = doc.slice(from + 2, cursor.to).search(/(?:  |\\)$/m)
+            let teat = 0
+            let tail = '}}'
+            let peek = tree.cursorAt(from) // Can't use copy of reference
+            peek.nextSibling()
+            if (to > -1) {
+              // Single line
+              to += from + 2
+            } else if (peek.name === 'BulletList' || peek.name === 'OrderedList') {
+              console.log(`-------------------------\npeeked ${peek.name}:\n->${doc.slice(peek.from, peek.to)}<-\n\npeek.to: ${peek.to}`)
+              // Convoluted indent math as it seem preceding paragraph eats one char from indent
+              to = peek.to
+              const indent = (peek.from - cursor.to - 1)/3
+              if (indent) { // Enclozing nested list
+                tail = `\n\n${' '.repeat(indent*4)}}}`
+              } else { // Enclozing root list
+                while (to + teat <= doc.length && /\s/.test(doc[to + teat])) teat++
+                tail = `\n\n}}${to + teat < doc.length ? '  \n' : '  '}`
+              }
+
+            } else {
+              // Wrap any other cases to paragraph end
+              to = cursor.to
+            }
+            trs.push(
+              {changes: {from: from, to: from + feat, insert: head}},
+              {changes: {from: to, to: to + teat, insert: tail}}
+            )
+          } 
         }
       } else if (cursor.name === 'TableCell') {
         const cell = doc.slice(cursor.from, cursor.to)
         let m
         // Cloze entire cell
-        if (m = cell.match(/^\s*:(?!:|\s*\{\{c\d+::)\s*(.*?)\s*$/)) {
+        if (m = cell.match(/^\s*::\s*(.*?)\s*$/)) {
           trs.push({changes: {
             from: cursor.from,
             to: cursor.to,
             insert: `{{c${++ord}::${m[1]}}}`}
           })
-        // Close after `:`
-        } else if (m = cell.match(/(?<!:|\\):(?!:|\s*\{\{c\d+::)\s*(.*)\s*$/)) {
+        // Close after `::`
+        } else if (m = cell.match(/(?<!{{c\d+)::(?:$|\s+(.*)\s*$)/)) {
           trs.push({changes: {
-            from: cursor.from + m.index + 1,
+            from: cursor.from + m.index,
             to: cursor.to,
-            insert: ` {{c${++ord}::${m[1]}}}`}
+            insert: `: {{c${++ord}::${m[1]}}}`}
           })  
         }
       }
