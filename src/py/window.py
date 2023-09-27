@@ -10,21 +10,21 @@ _config = {}
 _dlgs = {}
 
 ###########################################################################
-class Bridge(QObject):
-    """Class to handle js bridge"""
-    @pyqtSlot(str, result=str)
-    def cmd(self, cmd):
-        if res := handler(cmd):
-            return json.dumps(res)
-        return None
-
-###########################################################################
 class IM_window(QMainWindow):
     """Main window to edit markdown in external window"""
 
     ###########################################################################
     def __init__(self, editor: aqt.editor.Editor, note: anki.notes.Note, fid: int):
         """Constructor: Populates and shows window"""
+
+        class Bridge(QObject):
+            """Class to handle js bridge"""
+            @pyqtSlot(str, result=str)
+            def cmd(self, cmd):
+                if (res := handler(cmd, self.parent(), self.parent().web)) is not None:
+                    return json.dumps(res)
+                return None
+
         global _config, _dlgs
         super().__init__(None, Qt.WindowType.Window)
         _dlgs[hex(id(self))] = self # Save ref to prevent garbage collection
@@ -58,7 +58,7 @@ class IM_window(QMainWindow):
         html = f'''
         <html{' class="night-mode"' if aqt.theme.theme_manager.get_night_mode() else ''}>
         <head>
-            <link rel=stylesheet href="_anki/css/webview.css">
+            <link rel=stylesheet href="_anki/css/note_creator.css">
             <link rel=stylesheet href="{ADDON_RELURL}/mdi.css">
             <link rel=stylesheet href="{ADDON_RELURL}/{get_path('cm.css')}">
             <script src="{ADDON_RELURL}/window.js"></script>

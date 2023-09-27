@@ -119,6 +119,11 @@
 			{
 				"key": "Mod-Shift-v",
 				"preventDefault": true,
+				"run": "pasteRaw"
+			},
+			{
+				"key": "Mod-Alt-V",
+				"preventDefault": true,
 				"run": "pasteMenu"
 			},
 			{

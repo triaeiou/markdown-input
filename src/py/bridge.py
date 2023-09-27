@@ -1,6 +1,7 @@
 import os, datetime, re, sys, importlib, json
+from typing import Callable, Any
 from bs4 import BeautifulSoup, Tag
-from aqt import QImage, mw, QApplication, QClipboard, gui_hooks
+from aqt import QImage, mw, QApplication, QClipboard, QMainWindow, QWebEngineView, operations
 from anki.utils import namedtmp
 from anki.collection import Config
 from .version import strvercmp
@@ -20,7 +21,7 @@ def get_addon(addon: list[str]):
                 pass
     return None
 
-def handler(msg: str) -> str:
+def handler(msg: str, window: QMainWindow, webview: QWebEngineView) -> str:
     """
     Handle bridge messages
     """
@@ -33,20 +34,21 @@ def handler(msg: str) -> str:
     res = None
 
     mime = QApplication.clipboard().mimeData(QClipboard.Mode.Clipboard)
-    if msg == 'clipboard-contents':
+    if msg.startswith('clipboard-contents'):
         res = {
             'image': mime.hasImage(),
             'text': mime.hasText(),
             'html': mime.hasHtml(),
             'media': bool(im_utils.parse_clipboard()) if im_utils else False
         }
-    elif msg == 'clipboard-html':
+    elif msg.startswith('clipboard-html'):
         res = clean_html(mime.html())
-    elif msg == 'clipboard-text':
+    elif msg.startswith('clipboard-text'):
         res = clean_text(mime.text())
-    elif msg == 'clipboard-raw':
+    elif msg.startswith('clipboard-raw'):
         res = mime.text()
-    elif msg == 'clipboard-image':
+    elif msg.startswith('clipboard-image'):
+        res = ''
         if mime.hasImage():
             im = QImage(mime.imageData())
             uname = namedtmp(datetime.datetime.now().strftime('paste-%y.%m.%d-%H.%M.%S'))
@@ -60,15 +62,24 @@ def handler(msg: str) -> str:
             path = uname + ext
             if os.path.exists(path):
                 res = f"![]({mw.col.media.add_file(path)})"
-    elif msg == 'clipboard-media' or msg == 'clipboard-audio':
-        # Add media to media library and return inline media tag
+    elif msg.startswith('clipboard-media') or msg.startswith('clipboard-audio'):
+        # Add media to media library and create inline media tag
+        # A little more involved as we want to do the conversion in background thread
+        res = ''
         if im_utils:
             if srcs := im_utils.parse_clipboard():
-                t = 'video' if msg == 'clipboard-media' else 'audio'
-                # needs to be background op
-                if media := im_utils.add_media(srcs[:1], t):
-                    res = im_utils.tag_media(media[0])
-
+                t = 'video' if msg.startswith('clipboard-media') else 'audio'
+                cb = msg[msg.index(':') + 1:].strip()
+                # Background thread func for adding the media
+                def background(*_):
+                    media = im_utils.add_media(srcs[:1], t)
+                    return im_utils.tag_media(media[0])
+                def success(html: str):
+                    webview.page().runJavaScript(f'''(function () {{
+                        {cb}({json.dumps(html)});
+                    }})();'''
+                )
+                operations.QueryOp(parent=window, op=background, success=success).with_progress('Downloading and converting media...').run_in_background()
     return res
 
 def clean_html(html: str) -> str:

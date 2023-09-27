@@ -1,5 +1,4 @@
 import { EditorView } from '@codemirror/view'
-import { ancestor } from '../utils'
 
 interface Item {
     text: string
@@ -35,62 +34,65 @@ function dialog(view: EditorView, html: string, buttons: Item[]) {
 }
 
 function popmenu(view: EditorView, options: Item[]) {
-    function hide() {
-        menu.hidden = true
-
-        view.focus()
+    function close(evt) {
+        if (evt) {
+            evt.preventDefault()
+            evt.stopImmediatePropagation()
+        }
+        try {
+            menu?.remove()
+            menu = undefined    
+        } catch {
+            // nop
+        } finally {
+            view.focus()
+        }
     }
 
-    function show(focus: HTMLButtonElement) {
-        const pos = view.coordsAtPos(view.state.selection.main.anchor, 1)
-        menu.style.left = pos.left + "px"
-        menu.style.top = pos.top + "px"
-        menu.hidden = false
-        focus.focus()
-    }
+    let menu = document.createElement('div') as HTMLDivElement
+    menu.classList.add('cm-panels', 'cm-panel', 'cm-popmenu')
+    menu.addEventListener('keydown', (evt: KeyboardEvent) => {
+        if (evt.key === 'Escape') {
+            close(evt)
+        } else if (evt.key === 'ArrowDown' || evt.key === 'Tab' && !evt.shiftKey) {
+            ((document.activeElement.nextElementSibling || itms.firstElementChild) as HTMLButtonElement)
+            .focus()
+            evt.preventDefault()
+            evt.stopImmediatePropagation()
+        } else if (evt.key === 'ArrowUp' || evt.key === 'Tab' && evt.shiftKey) {
+            ((document.activeElement.previousElementSibling || itms.lastElementChild) as HTMLButtonElement)
+            .focus()
+            evt.preventDefault()
+            evt.stopImmediatePropagation()
+        }
+    })
+    menu.addEventListener('focusout', (evt: FocusEvent) => {
+        if (menu && !menu.contains(evt.relatedTarget as Node)) {
+            close(evt)
+        }
+    })
 
-    let menu = document.querySelector('.cm-editor .cm-popmenu') as HTMLDivElement
-    if (!menu) {
-        menu = document.createElement('div') as HTMLDivElement
-        menu.classList.add('cm-panels', 'cm-panel', 'cm-popmenu')
-        menu.innerHTML = '<div class="cm-popmenu-items"></div>'
-        menu.addEventListener('keydown', (evt: KeyboardEvent) => {
-            if (evt.key === 'Escape') {
-                hide()
-                evt.preventDefault()
-                evt.stopImmediatePropagation()
-            } else if (evt.key === 'ArrowDown' || evt.key === 'Tab' && !evt.shiftKey) {
-                ((document.activeElement.nextElementSibling || itms.firstElementChild) as HTMLButtonElement)
-                .focus()
-                evt.preventDefault()
-                evt.stopImmediatePropagation()
-            } else if (evt.key === 'ArrowUp' || evt.key === 'Tab' && evt.shiftKey) {
-                ((document.activeElement.previousElementSibling || itms.lastElementChild) as HTMLButtonElement)
-                .focus()
-                evt.preventDefault()
-                evt.stopImmediatePropagation()
-            }
-        })
-        menu.addEventListener('focusout', (evt: FocusEvent) => {
-            if (!menu.contains(evt.relatedTarget as Node)) hide()
-        })
-        view.dom.appendChild(menu)
-    }
-    const itms = menu.querySelector('.cm-popmenu-items') as HTMLDivElement
-    itms.innerHTML = ''
+    const itms = document.createElement('div') as HTMLDivElement
+    itms.classList.add('cm-popmenu-items')
+    menu.appendChild(itms)
     let focus: HTMLButtonElement
     for (const opt of options) {
         const el = document.createElement('button') as HTMLButtonElement
         el.classList.add('cm-popmenu-item')
         el.innerHTML = opt.text
         el.addEventListener('click', (evt) => {
-            hide()
+            close(evt)
             opt.onclick?.(evt)
         })
         if (opt.default) focus = el
         itms.appendChild(el)
     }
-    show(focus || itms.firstElementChild as HTMLButtonElement)
+
+    const pos = view.coordsAtPos(view.state.selection.main.anchor, 1)
+    menu.style.left = pos.left + "px"
+    menu.style.top = pos.top + "px"
+    view.dom.appendChild(menu);
+    (focus || itms.firstElementChild as HTMLButtonElement).focus()
 }
 
 export type {Item}

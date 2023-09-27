@@ -74,9 +74,15 @@ function _paste(view: EditorView, format: 'md'|'txt'|'raw'|'media'|'audio', tran
         }
       })
     } else if (contents.media && ['media', 'audio'].includes(format)) {
-      bridgeCommand(format === 'media' ? 'clipboard-media' : 'clipboard-audio', (html: string) => {
+      const fn = `fn_${new Date().getTime()}${Math.floor(Math.random() * 10000)}`
+      const cmd = `clipboard-${format}: document.${fn}`
+      document[fn] = (html: string) => {
         let md = _paste['converter'].html_to_markdown(html)
-        if (md) write_to_dom(md, md.length)
+        if (md) write_to_dom(md, 0) // In second level callback we seem to end up at end already
+        delete document[fn]
+      }
+      bridgeCommand(cmd, (html: string) => {
+        // nop - everything in callback
       })
     } else if (contents.text) {
       bridgeCommand(format === 'raw' ? 'clipboard-raw' : 'clipboard-text', (txt: string) => {

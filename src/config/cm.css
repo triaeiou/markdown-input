@@ -71,8 +71,10 @@
 }
 
 .cm-editor .cm-panel input:focus,
-.cm-editor .cm-panel .cm-button:focus {
+.cm-editor .cm-panel .cm-button:focus,
+.cm-editor .cm-popmenu .cm-popmenu-item:focus {
 	outline: 1px solid var(--selected-bg);
+	/*border: 1px solid red;*/
 }
 
 .cm-editor .cm-panel label {
@@ -82,30 +84,6 @@
 .cm-editor .cm-content, .cm-editor .cm-dialog, .cm-editor .cm-popmenu {
   background-color: var(--canvas-elevated);
   color: var(--fg);
-}
-
-.cm-editor .cm-popmenu {
-	border: var(--border) 1px solid;
-	padding: 5px;
-	display: inline-block;
-	width: fit-content;
-	position: fixed;
-	z-index: 100;
-}
-
-.cm-editor .cm-popmenu .cm-popmenu-items {
-	display: flex;
-	flex-direction: column;
-	align-items: stretch
-}
-  
-.cm-editor .cm-popmenu .cm-popmenu-items .cm-popmenu-item {
-	flex-grow: 1;
-	display: block;
-	border: none;
-	background-color: var(--canvas);
-	text-align: left;
-	margin: 1px;
 }
 
 .cm-editor .cm-content {
