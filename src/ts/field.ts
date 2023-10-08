@@ -89,20 +89,23 @@ function onadd() {
   if (_config[FIELD]?.[FIELD_DEFAULT]?.toLowerCase() === 'markdown') {
     this.toggle()
     this.toggle_rich()
+    _focus(this.editor.cm)
   } else if (_config[FIELD]?.[FIELD_DEFAULT]?.toLowerCase() === 'rich text/markdown') {
     this.toggle()
-    // Ugly temporary hack to focus first Markdown input initially
+    _focus(this.editor.cm)
+  }
+  _editor_count++
+
+  /** Ugly temporary hack to focus first Markdown input initially */
+  function _focus(cm) {
     if(!_editor_count) {
       window.requestAnimationFrame(() =>
         window.requestAnimationFrame(() =>
-          window.requestAnimationFrame(() =>
-            this.editor.cm.focus()
-          )
+          cm.focus()
         )
       )
     }
   }
-  _editor_count++
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -128,10 +131,10 @@ function init(cfg: Configuration) {
 // Toggle md input
 function toggle(field: number | EditorFieldAPI) {
   if (typeof field === 'number')
-    _config[MDI].get_api(field).then(api => {do_toggle(api)})
-  else do_toggle(field)
+    _config[MDI].get_api(field).then(api => {_toggle(api)})
+  else _toggle(field)
 
-  function do_toggle(api) {
+  function _toggle(api) {
     if (_config[FIELD]?.[CYCLE_RICH_MD] && api.visible() !== api.rich_visible()) {
       api.toggle(true)
       api.toggle_rich(true)

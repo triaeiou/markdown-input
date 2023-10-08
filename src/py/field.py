@@ -51,6 +51,8 @@ def bridge(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool,
     Bridge to handle pasting by making clipboard content available to JS side.
     If the clipboard contains an image it is inserted in the media collection.
     """
+    if not isinstance(context, aqt.editor.Editor):
+        return handled
     if (res := handler(message, context.parentWindow, context.web)) is not None:
         return (True, res)
     return handled

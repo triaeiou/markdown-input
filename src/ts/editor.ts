@@ -88,11 +88,18 @@ class Editor {
     this.cm = new EditorView(editor_view)
   }
 
-  set_doc(doc: string, pos: 'start'|'end') {
+  set_doc(doc: string, pos: 'start'|'field'|'end') {
+    let i = 0
+    if (pos === 'field') {
+      i = doc.search(/(?<=^<!--.*?-->\n)./s)
+      if (i === -1) i = 0
+    } else if (pos === 'end') {
+      i = doc.length
+    }
     this.cm.setState(EditorState.create({
       doc: doc,
       extensions: this.extensions,
-      selection: {anchor: pos === 'start' ? 0 : doc.length}
+      selection: {anchor: i}
     }))
   }
 

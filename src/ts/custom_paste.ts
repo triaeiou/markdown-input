@@ -89,7 +89,7 @@ function _paste(view: EditorView, format: 'md'|'txt'|'raw'|'media'|'audio', tran
         txt = tr(transform, txt)
         write_to_dom(txt, txt.length)
       })
-    } else if (contents.image && format === 'md') {
+    } else if (contents.image && ['md', 'txt'].includes(format)) {
       bridgeCommand('clipboard-image', (img: string) => {
         if (img) write_to_dom(img, 2)
       })

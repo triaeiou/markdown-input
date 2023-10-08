@@ -3,10 +3,10 @@
  */
 import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@codemirror/view"
 import { RangeSetBuilder } from "@codemirror/state"
-import { dialog } from "./input"
+import { dialog, popmenu } from "./input"
 import { grow, shrink } from "../utils"
 import { syntaxTree } from "@codemirror/language"
-import {SyntaxNodeRef} from "@lezer/common"
+import { SyntaxNodeRef } from "@lezer/common"
 
 const CLOZE = Decoration.mark({
   attributes: {class: "cm-cloze"}
@@ -374,4 +374,21 @@ function autoCloze(view: EditorView): boolean {
   return true
 }
 
-export {clozeDecorator, currentOrdinal, clozeNext, clozeCurrent, unclozeSelections, sortClozes, syncClozes, autoCloze}
+function clozeMenu(view: EditorView) {
+  popmenu(
+    view,
+    [
+      {text: 'Cloze with current ordinal', onclick: (evt) => {clozeNext(view)}, default: true},
+      {text: 'Cloze with next ordinal', onclick: (evt) => {clozeCurrent(view)}, default: false},
+      {text: 'Uncloze selections', onclick: (evt) => {unclozeSelections(view)}, default: false},
+      {text: 'Synchronise clozes in selections', onclick: (evt) => {syncClozes(view)}, default: false},
+      {text: 'Sort clozes ascending', onclick: (evt) => {sortClozes(view)}, default: false},
+      {text: 'Automatically cloze selections', onclick: (evt) => {autoCloze(view)}, default: false}
+    ]
+  )
+}
+
+export {
+  clozeDecorator, currentOrdinal, clozeNext, clozeCurrent,
+  unclozeSelections, sortClozes, syncClozes, autoCloze, clozeMenu
+}

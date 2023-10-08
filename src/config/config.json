@@ -97,6 +97,11 @@
 				"preventDefault": true
 			},
 			{
+				"key": "Alt-Shift-c",
+				"run": "clozeMenu",
+				"preventDefault": true
+			},
+			{
 				"key": "Mod-Shift-s",
 				"run": "syncClozes",
 				"preventDefault": true
@@ -122,7 +127,7 @@
 				"run": "pasteRaw"
 			},
 			{
-				"key": "Mod-Alt-V",
+				"key": "Alt-Shift-v",
 				"preventDefault": true,
 				"run": "pasteMenu"
 			},
@@ -130,6 +135,11 @@
 				"key": "Mod-h",
 				"preventDefault": true,
 				"run": "help"
+			},
+			{
+				"key": "Mod-Alt-P",
+				"preventDefault": true,
+				"run": "previewMedia"
 			}
 		],
 		"search": {

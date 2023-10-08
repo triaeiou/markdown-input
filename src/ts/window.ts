@@ -31,7 +31,7 @@ class WindowEditor {
       let html = ''
       for (const [title, content] of fields)
         html += `<!-- ${title} --><br><br>${content}<br><br>`
-      this.editor.set_doc(this.converter.html_to_markdown(html), 'start')
+      this.editor.set_doc(this.converter.html_to_markdown(html), 'field')
     } else
       this.editor.set_doc(this.converter.html_to_markdown(fields[i][1]), 'end')
     this.editor.cm.focus()

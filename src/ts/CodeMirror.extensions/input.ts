@@ -88,11 +88,17 @@ function popmenu(view: EditorView, options: Item[]) {
         itms.appendChild(el)
     }
 
-    const pos = view.coordsAtPos(view.state.selection.main.anchor, 1)
-    menu.style.left = pos.left + "px"
-    menu.style.top = pos.top + "px"
     view.dom.appendChild(menu);
     (focus || itms.firstElementChild as HTMLButtonElement).focus()
+    const caret = view.coordsAtPos(view.state.selection.main.anchor, 1)
+    menu.style.left = Math.max(0, Math.min(
+        caret.left,
+        document.documentElement.clientWidth - menu.clientWidth
+    )) + "px"
+    menu.style.top = Math.max(0, Math.min(
+        caret.top,
+        document.documentElement.clientHeight - menu.clientHeight
+    )) + "px"
 }
 
 export type {Item}
