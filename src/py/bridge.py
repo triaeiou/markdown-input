@@ -68,12 +68,13 @@ def handler(msg: str, window: QMainWindow, webview: QWebEngineView) -> str:
         res = ''
         if im_utils:
             if srcs := im_utils.parse_clipboard():
+                print(f'::{json.dumps(srcs)}')
                 t = 'video' if msg.startswith('clipboard-media') else 'audio'
                 cb = msg[msg.index(':') + 1:].strip()
                 # Background thread func for adding the media
                 def background(*_):
                     media = im_utils.add_media(srcs[:1], t)
-                    return im_utils.tag_media(media[0])
+                    return im_utils.tag_media(media[0]) if len(media) else None
                 def success(html: str):
                     webview.page().runJavaScript(f'''(function () {{
                         {cb}({json.dumps(html)});

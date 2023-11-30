@@ -9,7 +9,8 @@ const previewMedia = (view: EditorView) => {
         return true
     const tree = syntaxTree(view.state)
     const cursor = tree.cursorAt(selection.ranges[0].anchor)
-    while (cursor) {
+    do {
+console.log(`cursor: ${cursor}`)
         if (cursor.name === 'Image') {
             cursor.firstChild()
             // @ts-expect-error
@@ -31,8 +32,7 @@ const previewMedia = (view: EditorView) => {
         } else if (cursor.name === 'Paragraph') {
             break
         }
-        cursor.parent()
-    }
+    } while (cursor.parent())
     
     return true
 

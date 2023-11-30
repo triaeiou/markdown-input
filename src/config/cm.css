@@ -285,6 +285,11 @@ https://raw.githubusercontent.com/isagalaev/highlight.js/master/src/styles/vs201
 	font-weight: bold;
 }
 
+/* .hljs-underline */
+.night_mode .cm-editor .tok-underline {
+	text-decoration: underline;
+}
+
 /*.hljs-code {
 	font-family:'Monospace';
 }*/
@@ -415,7 +420,6 @@ Visual Studio-like style based on original C# coloring by Jason Diamond <jason@d
 	text-decoration: underline;
 }
 
-
 /* .vscode-light .hljs-emphasis  */
 .cm-editor .tok-emphasis {
 	font-style: italic;
@@ -424,4 +428,9 @@ Visual Studio-like style based on original C# coloring by Jason Diamond <jason@d
 /* .vscode-light .hljs-strong */
 .cm-editor .tok-strong {
 	font-weight: bold;
+}
+
+/* .vscode-light .hljs-strong */
+.cm-editor .tok-underline {
+	text-decoration: underline;
 }

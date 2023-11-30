@@ -1,73 +1,86 @@
-import {MarkdownConfig, InlineContext} from "@lezer/markdown"
-import {tags as t} from "@lezer/highlight"
-/*
-const CLOZE = Decoration.mark({
-  attributes: {class: "cm-cloze"}
-})
-const CLOZE_RE = new RegExp(String.raw`(?:{{c\d+::|}})`, 'g')
+import { HighlightStyle } from '@codemirror/language'
+import { Tag, tags } from '@lezer/highlight'
+import { MarkdownConfig, InlineContext, DelimiterType, Element } from '@lezer/markdown'
 
-function _deco(view: EditorView) {
-  let builder = new RangeSetBuilder<Decoration>()
-  for (let {from, to} of view.visibleRanges) {
-    for (let pos = from; pos <= to;) {
-      let line = view.state.doc.lineAt(pos)
-      for (const match of line.text.matchAll(CLOZE_RE)) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, CLOZE)
-      }
-      pos = line.to + 1
-    }
-  }
-  return builder.finish()
+// Declaring some types that aren't exported from the library
+export let Punctuation = /[!"#$%&'()*+,\-.\/:;<=>?@\[\\\]^_`{|}~\xA1\u2010-\u2027]/
+try { Punctuation = new RegExp("[\\p{Pc}|\\p{Pd}|\\p{Pe}|\\p{Pf}|\\p{Pi}|\\p{Po}|\\p{Ps}]", "u") } catch (_) {}
+const enum Mark { Open = 1, Close = 2 }
+class InlineDelimiter {
+  constructor(readonly type: DelimiterType,
+              readonly from: number,
+              readonly to: number,
+              public side: Mark) {}
 }
 
-const clozeDecorator = ViewPlugin.fromClass(class {
-  decorations: DecorationSet
-
-  constructor(view: EditorView) {
-    this.decorations = _deco(view)
-  }
-
-  update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged)
-      this.decorations = _deco(update.view)
-  }
-}, {
-  decorations: v => v.decorations
-})
-*/
-
-// Copied without change from lezer/markdown
-//https://github.com/lezer-parser/markdown/blob/bd2b2dd03eb04cc64da4dc634e3462380dd03e05/src/markdown.ts#L232
-function space(ch: number) { return ch == 32 || ch == 9 || ch == 10 || ch == 13 }
-
-// Copied without change from lezer/subscript
-// https://github.com/lezer-parser/markdown/blob/bd2b2dd03eb04cc64da4dc634e3462380dd03e05/src/extension.ts#L169
-function parseUnderline(ch: number, node: string, mark: string) {
-  return (cx: InlineContext, next: number, pos: number) => {
-    if (next != ch || cx.char(pos + 1) == ch) return -1
-    let elts = [cx.elt(mark, pos, pos + 1)]
-    for (let i = pos + 1; i < cx.end; i++) {
-      let next = cx.char(i)
-      if (next == ch)
-        return cx.addElement(cx.elt(node, pos, i + 1, elts.concat(cx.elt(mark, i, i + 1))))
-      if (next == 92 /* '\\' */)
-        elts.push(cx.elt("Escape", i, i++ + 2))
-      if (space(next)) break
-    }
-    return -1
-  }
-}
-
-// Copied from lezer/subscript - only replaced "Superscript" and "^"
-// https://github.com/lezer-parser/markdown/blob/bd2b2dd03eb04cc64da4dc634e3462380dd03e05/src/extension.ts
-/// Extension providing _underline_ using `_` markers
-export const Underline: MarkdownConfig = {
+// Copied from https://github.com/lezer-parser/markdown/blob/91eb10240cacac3c4c65b812dd8fd3023af8c25c/src/markdown.ts#L1444
+// and modified
+const UnderlineDelim = {resolve: "Underline", mark: "UnderlineMark"}
+const underlineMarkTag = Tag.define()
+const underlineTag = Tag.define(underlineMarkTag)
+/** Lezer extension to parse `=something here=` as underline */
+const Underline: MarkdownConfig = {
   defineNodes: [
-    {name: "Underline", style: t.special(t.content)},
-    {name: "UnderlineMark", style: t.processingInstruction}
+    {name: "Underline", style: {'Underline/...': underlineTag}},
+    {name: "UnderlineMark", style: underlineMarkTag}
   ],
   parseInline: [{
     name: "Underline",
-    parse: parseUnderline(95 /* '_' */, "Underline", "UnderlineMark")
+    parse(cx: InlineContext, next: number, start: number) {
+      let pos = start + 1
+      if (next != 61 || cx.char(pos) == 61) return -1
+      const before = cx.slice(start - 1, start), after = cx.slice(pos, pos + 1)
+      const pBefore = Punctuation.test(before), pAfter = Punctuation.test(after)
+      const sBefore = /\s|^$/.test(before), sAfter = /\s|^$/.test(after)
+      const leftFlanking = !sAfter && (!pAfter || sBefore || pBefore)
+      const rightFlanking = !sBefore && (!pBefore || sAfter || pAfter)
+      const open = leftFlanking && (!rightFlanking || pBefore)
+      const close = rightFlanking && (!leftFlanking || pAfter)
+      return cx.addDelimiter(UnderlineDelim, start, pos, open, close)
+    },
+    before: 'Emphasis'
+  }] }
+
+const underlineDecorator = HighlightStyle.define([
+  {tag: underlineMarkTag, class: 'tok-meta'},
+  {tag: underlineTag, textDecoration: 'underline', class: 'tok-underline'}
+])
+
+const AudioDelim = {resolve: "Media", mark: "AudioMark"} //"Audio", mark: "AudioMark"}
+const audioMarkTag = Tag.define()
+const audioTag = Tag.define(audioMarkTag)
+const VideoDelim = {resolve: "Media", mark: "VideoMark"} //"Video", mark: "VideoMark"}
+const videoMarkTag = Tag.define()
+const videoTag = Tag.define(videoMarkTag)
+const Media: MarkdownConfig = {
+  defineNodes: [
+    {name: "Audio", style: {'Audio/...': audioTag}},
+    {name: "AudioMark", style: audioMarkTag},
+    {name: "Video", style: {'Audio/...': audioTag}},
+    {name: "VideoMark", style: videoMarkTag},
+  ],
+  parseInline: [{
+    name: "Media",
+    parse(cx: InlineContext, next: number, start: number) {
+      console.log('Media resolver: [' + next + ']' + cx.slice(start + 1, cx.end) + '\n' + '\n----')
+      if (next != 58 /* : */) return -1
+      const match = cx.slice(start + 1, cx.end).match(/^(audio|video)\[(.*?)\](?:\{.*?\})?/)
+      if (!match) return -1
+      console.log(`match: ${match[1]}`)
+      return cx.addDelimiter(
+        match[1] === 'audio' ? AudioDelim : VideoDelim,
+        start, start + match[0].length, true, true
+      )
+    },
+    before: 'Emphasis'
   }]
 }
+
+const mediaDecorator = HighlightStyle.define([
+  {tag: audioMarkTag, class: 'tok-meta'},
+  {tag: audioTag, class: 'tok-audio'},
+  {tag: videoMarkTag, class: 'tok-meta'},
+  {tag: videoTag, class: 'tok-video'}
+])
+
+export {Underline, underlineDecorator, Media, mediaDecorator}

@@ -13,9 +13,9 @@ The editor DOM and internal functioning which `Markdown input` depends on change
 ## Warning
 
 - Markdown is not "another way to write HTML", it is a plain text format that has a determined translation to HTML (the format the Anki editor uses). The HTML generated is a subset of all HTML and, amongst other things, makes heavy use of `<p>` tags (which are not used by the Anki editor). Furthermore there is no spec on the conversion from HTML *to* Markdown. This makes conversion tricky and there is risk for loss of information when cycling HTML → Markdown → HTML.
-- Editing a field in Markdown will result in the original field HTML being converted to Markdown and then back to HTML - the end result may differ from the original (especially in case of complex HTML). For instance, the representation of tables does not allow for nested tables in Markdown. So if the original HTML has nested tables these will be lost on cycling. If you are not familiar with Markdown consider duplicating your deck and play around with a copy so that you are sure you know what you are doing.
+- Editing a field in Markdown will result in the original field HTML being converted to Markdown and then back to HTML - the end result may differ from the original (especially in case of complex HTML). For instance, the Markdown representation of tables does not allow for nested tables. So if the original HTML has nested tables these will be lost on cycling. If you are not familiar with Markdown consider duplicating your deck and play around with a copy so that you are sure you know what you are doing.
 - Note however, that if you do not make any changes in the "field input mode" or cancel the "window input mode" the orginal Anki HTML will remain untouched when you toggle back. Also note that in field input mode making a change and then undoing will still count as "making a change" (changes update the HTML continuously).
-- If you are not familiar with Markdown look it up where it [began](https://daringfireball.net/projects/markdown/basics) or [here](https://commonmark.org/help/tutorial/) or [here](https://commonmark.org/help/) for instance, to determine if it is for you.
+- If you are not familiar with Markdown look it up, for instance where it [began](https://daringfireball.net/projects/markdown/basics) or [here](https://commonmark.org/help/tutorial/) or [here](https://commonmark.org/help/), to determine if it is for you.
 
 ## HTML ↔ Markdown
 
@@ -33,7 +33,7 @@ Conversion to/from HTML is done through [unified](https://unifiedjs.com/) Markdo
 - Markdown syntax extensions (set to `true` or `"some vale"` to enable, `false` to disable):
   - `Subscript`: `true` for `~sample~` subscript
   - `Superscript`: `true`for `^sample^` superscript
-  - `Underline`: `true` for `_sample_` underline (spec Markdown is `<em>`, disable to revert to spec).
+  - `Underline`: `true` for `=sample=` underline.
   - `Strikethrough`: `"double"` for `~~sample~~` strikthrough (`"single"` supports single tilde, incompatible with subscript above).
   - `Inline media`: `true`for [Inline Media](https://ankiweb.net/shared/info/683715045) directive, e.g. `:audio(im-xyz.ogg){loop auto_front}`/`:video(im-xyz.ogg){loop auto_front height=200}`.
   - `Definition lists`: `true` for [Defintion lists](https://github.com/wataru-chocola/mdast-util-definition-list) (not available in the core Anki editor).
@@ -68,7 +68,7 @@ The editor used is [CodeMirror 6](https://codemirror.net/) with the following co
 - Search and replace with configurable default options (`caseSensitive`, `regexp`, `wholeWord`).
 - Insert cloze deletions as well as a few different functions to manipulate clozes (see below).
 - Customize Markdown input editor shortcuts (i.e. *inside* the field/window, not the core Anki editor) in `config.json`, see `config.json` and [CodeMirror documentation](https://codemirror.net/docs/ref/#view.KeyBinding) for further information.
-  - Note that the default Anki shortcuts "eats" some of these before they ever reach the editor so either set to other key sequebces in config or unmap/remap the Anki editor shortcuts with [Override shortcuts](https://ankiweb.net/shared/info/604635542), [Customize Keyboard Shortcuts](https://ankiweb.net/shared/info/24411424) or similar.
+  - Note that the default Anki shortcuts "eats" some of these before they ever reach the editor so either set to other key sequences in config or unmap/remap the Anki editor shortcuts with [Override shortcuts](https://ankiweb.net/shared/info/604635542), [Customize Keyboard Shortcuts](https://ankiweb.net/shared/info/24411424) or similar.
   - The format of `CodeMirror` shortcuts are `CodeMirror`-style, modifiers and keys separated by `-` rather than `+` and `Mod` corresponds to `Ctrl` on Windows and `Meta` on MacOS.
   - Also note that `Ctrl-Alt` results in the char being interpreted as upper case, amend the sequence appropriately, i.e. `Ctrl-Alt-x` never fires, only `Ctrl-Alt-X`.
 - Customize the editor styling by copying `cm.css` into `user_files` subdirectory and customize. Consider using `--var(xyz)` to use the Anki colors from the current theme (i.e. follows light/dark mode).
@@ -97,6 +97,7 @@ Available editor commands are most standard CodeMirror commands (see [@codemirro
 - `pasteText`/`pasteTextAppend`/`pasteTextStrip`: Similar to the equivalent `pasteMarkdown` but disregards HTML and uses the text version of the clipboard, trying to amend any lists to correct Markdown formating.
 - `pasteRaw`: Pastes text content of clipboard without any modification (default `Ctrl-Shift-v`).
 - `pasteMenu`: Shows a popup menu with all paste possibilities (default `Alt-Shift-v`).
+- `previewMedia`: When activated over a media link (the URL part of a link, image, video or audio tag) opens a dialog with a preview (default `Ctrl-Alt-p`).
 
 ### Field input mode
 
@@ -209,4 +210,4 @@ Functionality split into different classes to facilitate reuse:
 - 2023-04-26: Improve logic to fix anoying eating of trailing spaces, change search/replace dialog placement so that it is visible without having to scroll.
 - 2023-05-04: Add `rich text/markdown` field default configuration option, add list continuation thanks to [David C.](https://github.com/d-k-bo).
 - 2023-06-01: Table bug fix (tables now non-optional), rename config option from `Table style` to `Tables`, add code block syntax highlighting, add `Browser sort field` option, add styling of cloze tags in the Markdown editor.
-- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "paste as inline media" (requires [Inline media](https://ankiweb.net/shared/info/683715045)), "paste as inline audio" (requires [Inline media](https://ankiweb.net/shared/info/683715045)), uncloze", "auto cloze", "sync clozes", "cloze menu", "paste menu" and "help" functionality added. Added Markdown conversion options `tightenHeadings` (removes blank line after heading of configured level and above, `false` or delete line to remove), `tightenLists` (removes blank line before a "tight" list) and `listItemIndentLeadOnly` (when used with `listItemIndent`:`"tab"` aligns nested lists at multiples of 4 spaces but only one space *after* the bullet). Fix focused field bug in add window.
+- 2023-08-26: Add paste HTML (including clean up of HTML from Word) as Markdown or text, optionally amending or stripping clozes, "paste as inline media" (requires [Inline media](https://ankiweb.net/shared/info/683715045)), "paste as inline audio" (requires [Inline media](https://ankiweb.net/shared/info/683715045)), uncloze", "auto cloze", "sync clozes", "cloze menu", "paste menu" and "help" functionality added. Added Markdown conversion options `tightenHeadings` (removes blank line after heading of configured level and above, `false` or delete line to remove), `tightenLists` (removes blank line before a "tight" list) and `listItemIndentLeadOnly` (when used with `listItemIndent`:`"tab"` aligns nested lists at multiples of 4 spaces but only one space *after* the bullet). Change `underline` symbol from `_` to `=`. Fix focused field bug in add window.

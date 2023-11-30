@@ -8,9 +8,9 @@ import {highlightSelectionMatches, search} from "search"
 import {autocompletion, completionKeymap} from "@codemirror/autocomplete"
 import {markdown, markdownKeymap, markdownLanguage} from "@codemirror/lang-markdown"
 import {classHighlighter} from '@lezer/highlight'
-import {Subscript, Superscript, Strikethrough, Table} from "@lezer/markdown"
+import {Strikethrough} from "@lezer/markdown"
 
-import {Underline} from "./CodeMirror.extensions/markdown_extensions"
+import {Underline, underlineDecorator, Media, mediaDecorator} from "./CodeMirror.extensions/markdown_extensions"
 import {clozeDecorator} from "./CodeMirror.extensions/cloze"
 
 /** CodeMirror instance configuration */
@@ -28,11 +28,9 @@ interface Configuration {
 }
 
 const lezer_exts = [
-  Subscript,
-  Superscript,
   Strikethrough,
-  Table,
-  Underline
+  Underline,
+  Media
 ]
 
 class Editor {
@@ -55,7 +53,9 @@ class Editor {
       highlightSelectionMatches(),
       syntaxHighlighting(classHighlighter, {fallback: false}),
       clozeDecorator,
+      syntaxHighlighting(underlineDecorator, {fallback: false}),
       indentUnit.of("    "),
+      syntaxHighlighting(mediaDecorator, {fallback: false}),
       Prec.highest(
         keymap.of([
           ...cfg.keymap,
@@ -72,17 +72,17 @@ class Editor {
       ...cfg.extensions
     ]
 
+    if (cfg.oninput) {
+      this.extensions.push(
+        EditorView.updateListener.of(update => {
+          cfg.oninput(this.cm.state.doc.toString())
+        })
+      )
+    }
+
     const editor_view = {
       state: EditorState.create({extensions: this.extensions}),
       parent: cfg.parent
-    }
-
-    if (cfg.oninput) {
-      editor_view['dispatch'] = function(tr: Transaction) {
-        const res = this.update([tr])
-        if (!tr.changes.empty) cfg.oninput(this.state.doc.toString())
-        return res
-      }
     }
 
     this.cm = new EditorView(editor_view)
