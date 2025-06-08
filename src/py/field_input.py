@@ -47,9 +47,8 @@ def add_srcs(web_content: aqt.webview.WebContent, context: object):
 
     # Configure Unified and CodeMirror - after script load but before cm instantiation
     web_content.body += f'''
-        <script>
-            MarkdownInput.init({json.dumps(_config)});
-        </script>
+        <div id="markdown-config" data-config='{json.dumps(_config)}'></div>
+        <script src="/_addons/{addon}/init_config.js"></script>
     '''
 
 ###########################################################################

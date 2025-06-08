@@ -34,5 +34,10 @@ export default [
     input: "src/ts/field_input_2.1.55.ts",
     plugins: plugins,
     output: output
-  }
+  },
+  {
+    input: "src/ts/init_config.ts",
+    plugins: plugins,
+    output: output,
+  },
 ]
